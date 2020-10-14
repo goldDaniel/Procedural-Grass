@@ -60,8 +60,8 @@ static TerrainMesh* GenerateChunk(const FastNoise noise, int chunkX, int chunkZ,
 {
 	TerrainMesh* result = new TerrainMesh();
 
-	result->chunkX = chunkX * scale;
-	result->chunkZ = chunkZ * scale;
+	result->chunkX = static_cast<int>(chunkX * scale);
+	result->chunkZ = static_cast<int>(chunkZ * scale);
 	result->positions.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 	result->normals.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 	result->texCoords.reserve(2 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
@@ -90,20 +90,18 @@ static TerrainMesh* GenerateChunk(const FastNoise noise, int chunkX, int chunkZ,
 
 			glm::vec3 normal = glm::normalize(cross(pos1 - pos0, pos2 - pos0));
 
-			float texCoordX = (x - startX) / (endX - startX);
-			float texCoordY = (z - startZ) / (endZ - startZ);
+			glm::vec2 texCoord = 
+			{
+				(x - startX) / (endX - startX),
+				(z - startZ) / (endZ - startZ)
+			};
 
 			
-			result->positions.push_back(pos0.x);
-			result->positions.push_back(pos0.y);
-			result->positions.push_back(pos0.z);
 
-			result->normals.push_back(normal.x);
-			result->normals.push_back(normal.y);
-			result->normals.push_back(normal.z);
+			result->positions.push_back(pos0);
+			result->normals.push_back(normal);
 
-			result->texCoords.push_back(texCoordX);
-			result->texCoords.push_back(texCoordY);
+			result->texCoords.push_back(texCoord);
 		}
 	}
 

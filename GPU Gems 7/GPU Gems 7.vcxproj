@@ -46,6 +46,7 @@
     <ClInclude Include="Src\Renderer\Shader.h" />
     <ClInclude Include="Src\Renderer\Texture.h" />
     <ClInclude Include="Src\Renderer\VertexArray.h" />
+    <ClInclude Include="Src\Terrain\GrassMesh.h" />
     <ClInclude Include="Src\Terrain\TerrainMeshGenerator.h" />
     <ClInclude Include="Src\Terrain\TerrainMesh.h" />
     <ClInclude Include="Src\Vendor\fastnoise\FastNoise.h" />

@@ -25,4 +25,3 @@ void main()
     FragColor = vec4(result, texture(grass_bilboard, TexCoords.xy).a);    
     if(FragColor.a < 0.1) discard;
 }
-

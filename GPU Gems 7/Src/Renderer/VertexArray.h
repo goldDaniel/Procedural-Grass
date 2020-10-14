@@ -9,15 +9,15 @@ class VertexArray
 public:
 	
 	VertexArray();
-	//if this is used we will draw using instancing
-	VertexArray(uint32_t intances);
 	~VertexArray();
 
 	void Bind() const;
 	void Unbind() const;
 
-	void AddVertexBuffer(const std::vector<float>& vertexBuffer, uint32_t elementsPerVertex);
-	void AddInstancedVertexBuffer(const std::vector<float>& data, uint32_t elementsPerVertex, uint32_t attribDivisor);
+	void SetNumInstances(uint32_t instances);
+
+	void AddVertexBuffer(float const* const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex);
+	void AddInstancedVertexBuffer(float const* const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex, uint32_t attribDivisor);
 
 	uint32_t GetID() const;
 

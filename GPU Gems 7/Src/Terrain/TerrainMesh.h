@@ -3,15 +3,16 @@
 #define TERRAIN_CHUNK_MESH_H
 
 #include <vector>
+#include <glm/glm.hpp>
 
 struct TerrainMesh
 {
 	int chunkX;
 	int chunkZ;
 
-	std::vector<float> positions;
-	std::vector<float> normals; 
-	std::vector<float> texCoords;
+	std::vector<glm::vec3> positions;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> texCoords;
 
 	std::vector<unsigned int> indices;
 

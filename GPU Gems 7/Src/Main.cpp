@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <chrono>
 #include <vector>
@@ -22,6 +23,7 @@
 #include "Input.h"
 
 
+#include "Terrain/GrassMesh.h"
 #include "Terrain/TerrainMeshGenerator.h"
 
 int main(int argc, char** argv)
@@ -55,54 +57,17 @@ int main(int argc, char** argv)
     std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
 
-
-
     Camera cam;
     Renderer renderer;
     std::vector<Renderable*> terrainRenderables;
 
     Shader* shader = renderer.CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
-    Texture2D* grass_bilboard = Texture2D::CreateTexture("Assets/Textures/Ground/Grass_Bilboard.png");
+    
 
-    int chunkDimensions = 32;
+    int chunkDimensions = 48;
     int size = 32;
-    float count = 0;
-    float total = size * size * 2;
-
-
-    Shader* instanceShader = new Shader("Assets/Shaders/InstancingTestVertex.glsl","Assets/Shaders/InstancingTestFragment.glsl");
-    std::vector<float> vertices =
-    {
-        -1.0, -1.0, 0.0,
-         1.0, -1.0, 0.0,
-         0.0,  1.0, 0.0,
-    };
-    std::vector<unsigned int> indices =
-    {
-        0, 1, 2,
-    };
-
-    std::vector<float> offsets;
-    int numOffsets = 128;
-    for (int i = 0; i < numOffsets; i++)
-    {
-        for (int j = 0; j < numOffsets; j++)
-        {
-            offsets.push_back(i * 2);
-            offsets.push_back(j * 2);
-            offsets.push_back(0);
-        }
-    }
-
-    VertexArray* instanceVArray = new VertexArray(numOffsets * numOffsets);
-    instanceVArray->AddVertexBuffer(vertices, 3);
-    instanceVArray->AddInstancedVertexBuffer(offsets, 3, 1);
-    IndexBuffer* instanceIBuffer = new IndexBuffer(indices);
-    Renderable* instanceRenderable = new Renderable(instanceShader, instanceVArray, instanceIBuffer);
-    instanceRenderable->SetModelMatrix(glm::mat4(1.0));
-
-    TerrainChunkGenerator gen(chunkDimensions, 256, 8.F);
+    TerrainChunkGenerator gen(chunkDimensions, 512, 8.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
@@ -110,12 +75,18 @@ int main(int argc, char** argv)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds > (t2 - t1).count();
     std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
 
+    std::vector<glm::vec3> offsets;
+    std::vector<glm::vec3> normals;
+
     for (TerrainMesh* chunk : chunks)
-    {
+    {        
         VertexArray* vertexArray = renderer.CreateVertexArray();
-        vertexArray->AddVertexBuffer(chunk->positions, 3);
-        vertexArray->AddVertexBuffer(chunk->normals, 3);
-        vertexArray->AddVertexBuffer(chunk->texCoords, 2);
+
+        
+
+        vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
+        vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
+        vertexArray->AddVertexBuffer(&chunk->texCoords[0].x, sizeof(glm::vec2) * chunk->texCoords.size(), 2);
 
         IndexBuffer* iBuffer = renderer.CreateIndexBuffer(chunk->indices);
 
@@ -128,11 +99,55 @@ int main(int argc, char** argv)
 
         terrainRenderables.push_back(renderable);
 
+        int offsetX = chunk->chunkX * chunkDimensions;
+        int offsetZ = chunk->chunkZ * chunkDimensions;
+        auto processPosition = [&offsetX, &offsetZ](glm::vec3& position)
+        {
+
+            position.x += offsetX;
+            position.z += offsetZ;
+        };
+
+        std::for_each(chunk->positions.begin(), chunk->positions.end(), processPosition);
+
+        offsets.insert(offsets.end(), chunk->positions.begin(), chunk->positions.end());
+
+        normals.insert(normals.end(), chunk->normals.begin(), chunk->normals.end());
+
         delete chunk;
     }    
     chunks.clear();
     chunks.shrink_to_fit(); 
 
+   
+    Renderable* instancedRenderable;
+    {
+        GrassMesh mesh;
+
+
+        VertexArray* vArray = new VertexArray();
+        vArray->AddVertexBuffer(&mesh.positions[0], sizeof(float) * mesh.positions.size(), 3);
+        vArray->AddVertexBuffer(&mesh.texCoords[0], sizeof(float) * mesh.texCoords.size(), 2);
+
+        vArray->AddInstancedVertexBuffer(&offsets[0].x, sizeof(glm::vec3) * offsets.size(), 3, 1);
+        vArray->AddInstancedVertexBuffer(&normals[0].x, sizeof(glm::vec3) * offsets.size(), 3, 1);
+
+        vArray->SetNumInstances(offsets.size());
+
+        IndexBuffer* iBuffer = new IndexBuffer(mesh.indices);
+
+        Texture2D* grass_bilboard = Texture2D::CreateTexture("Assets/Textures/Ground/Grass_Bilboard.png");
+
+        Shader* grassShader = new Shader("Assets/Shaders/GrassVertex.glsl", "Assets/Shaders/GrassFragment.glsl");
+
+        instancedRenderable = new Renderable(grassShader, vArray, iBuffer);
+        instancedRenderable->AddTexture("grass_bilboard", grass_bilboard);
+
+        instancedRenderable->SetModelMatrix(glm::mat4(1.f));
+        
+    }
+
+   
     bool running = true;
     Input input([&running]() { running = false; });
     
@@ -181,7 +196,7 @@ int main(int argc, char** argv)
 
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
-        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 4000.f);
+        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
 
         renderer.RenderSkybox(skyboxView, proj);
         
@@ -197,9 +212,12 @@ int main(int argc, char** argv)
             renderer.Render(*r);
         }
 
-        instanceRenderable->SetViewMatrix(cam.GetViewMatrix());
-        instanceRenderable->SetProjectionMatrix(proj);
-        renderer.Render(*instanceRenderable);
+        glDisable(GL_CULL_FACE);
+        instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
+        instancedRenderable->SetProjectionMatrix(proj);
+        renderer.Render(*instancedRenderable);
+        glEnable(GL_CULL_FACE);
+
 
         SDL_GL_SwapWindow(window);
     }

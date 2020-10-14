@@ -245,7 +245,7 @@ Renderable* Renderer::CreateSkyboxRenderable()
 	Shader* skybox_shader = CreateShader("Assets/Shaders/SkyboxVertex.glsl", "Assets/Shaders/SkyboxFragment.glsl");
 
 	VertexArray* skybox_vArray = CreateVertexArray();
-	skybox_vArray->AddVertexBuffer(skybox_vertices, 3);
+	skybox_vArray->AddVertexBuffer(&skybox_vertices[0], sizeof(float) * skybox_vertices.size(), 3);
 	IndexBuffer* skybox_iBuffer = CreateIndexBuffer(skybox_indices);
 
 

@@ -81,5 +81,8 @@
     <ClInclude Include="Src\Renderer\Renderable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Terrain\GrassMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
