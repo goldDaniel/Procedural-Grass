@@ -64,6 +64,7 @@ void Renderer::RenderSkybox(glm::mat4 view, glm::mat4 proj)
 void Renderer::Render(const Renderable& renderable) const
 {
 	renderable.shader->Bind();
+
 	renderable.shader->SetMat4("model", renderable.model);
 	renderable.shader->SetMat4("view", renderable.view);
 	renderable.shader->SetMat4("projection", renderable.proj);

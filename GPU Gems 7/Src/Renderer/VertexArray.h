@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <vector>
 
 
@@ -18,6 +19,7 @@ public:
 
 	void AddVertexBuffer(float const* const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex);
 	void AddInstancedVertexBuffer(float const* const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex, uint32_t attribDivisor);
+	void AddInstancedVertexBuffer(const std::vector<glm::mat4>& matrices);
 
 	uint32_t GetID() const;
 
@@ -30,7 +32,6 @@ private:
 	struct VertexBuffer
 	{
 		uint32_t m_vertexBufferID;
-		uint32_t m_elementsPerVertex;
 	};
 
 	uint32_t m_vertexArrayID = 0;

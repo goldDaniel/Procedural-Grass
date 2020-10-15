@@ -3,6 +3,7 @@
 #include <chrono>
 #include <vector>
 
+#include <cstdlib>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "Vendor/stb_image/stb_image.h"
@@ -65,9 +66,9 @@ int main(int argc, char** argv)
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
     
 
-    int chunkDimensions = 48;
+    int chunkDimensions = 32;
     int size = 32;
-    TerrainChunkGenerator gen(chunkDimensions, 512, 8.f);
+    TerrainChunkGenerator gen(chunkDimensions, 512, 4.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds > (t2 - t1).count();
     std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
 
-    std::vector<glm::vec3> offsets;
+    std::vector<glm::mat4> transforms;
     std::vector<glm::vec3> normals;
 
     for (TerrainMesh* chunk : chunks)
@@ -101,17 +102,26 @@ int main(int argc, char** argv)
 
         int offsetX = chunk->chunkX * chunkDimensions;
         int offsetZ = chunk->chunkZ * chunkDimensions;
-        auto processPosition = [&offsetX, &offsetZ](glm::vec3& position)
+        auto processPosition = [&transforms, &offsetX, &offsetZ](glm::vec3& position)
         {
+            glm::mat4 trans = glm::translate(glm::mat4(1.f), glm::vec3( position.x + offsetX,
+                                                                        position.y + 1,
+                                                                        position.z + offsetZ));
 
-            position.x += offsetX;
-            position.z += offsetZ;
+            float percent = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+
+            float rotation = glm::pi<float>() * percent;
+            float scale = 1 + percent * 8;
+
+            trans = glm::rotate(trans, rotation, glm::vec3(0, 1, 0));
+            trans = glm::scale(trans, glm::vec3(scale, scale, scale));
+
+            transforms.push_back(trans);
+            
         };
 
         std::for_each(chunk->positions.begin(), chunk->positions.end(), processPosition);
-
-        offsets.insert(offsets.end(), chunk->positions.begin(), chunk->positions.end());
-
         normals.insert(normals.end(), chunk->normals.begin(), chunk->normals.end());
 
         delete chunk;
@@ -124,15 +134,22 @@ int main(int argc, char** argv)
     {
         GrassMesh mesh;
 
+        std::vector<glm::vec3> scales;
+        for (size_t i = 0; i < normals.size(); i++)
+        {
+            float scaleX = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
+            float scaleY = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
+            float scaleZ = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
+            scales.push_back(glm::vec3(scaleX, scaleY, scaleZ));
+        }
 
         VertexArray* vArray = new VertexArray();
         vArray->AddVertexBuffer(&mesh.positions[0], sizeof(float) * mesh.positions.size(), 3);
         vArray->AddVertexBuffer(&mesh.texCoords[0], sizeof(float) * mesh.texCoords.size(), 2);
 
-        vArray->AddInstancedVertexBuffer(&offsets[0].x, sizeof(glm::vec3) * offsets.size(), 3, 1);
-        vArray->AddInstancedVertexBuffer(&normals[0].x, sizeof(glm::vec3) * offsets.size(), 3, 1);
-
-        vArray->SetNumInstances(offsets.size());
+        vArray->AddInstancedVertexBuffer(&normals[0].x, sizeof(glm::vec3) * normals.size(), 3, 1);
+        vArray->AddInstancedVertexBuffer(transforms);
+        vArray->SetNumInstances(transforms.size());
 
         IndexBuffer* iBuffer = new IndexBuffer(mesh.indices);
 
@@ -145,7 +162,14 @@ int main(int argc, char** argv)
 
         instancedRenderable->SetModelMatrix(glm::mat4(1.f));
         
+        scales.clear();
+        scales.shrink_to_fit();
     }
+    transforms.clear();
+    transforms.shrink_to_fit();
+    normals.clear();
+    normals.shrink_to_fit();
+
 
    
     bool running = true;
@@ -196,7 +220,7 @@ int main(int argc, char** argv)
 
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
-        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
+        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 4000.f);
 
         renderer.RenderSkybox(skyboxView, proj);
         

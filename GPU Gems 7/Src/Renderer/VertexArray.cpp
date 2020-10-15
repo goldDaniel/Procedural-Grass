@@ -1,5 +1,6 @@
 #include "VertexArray.h"
 
+#include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <cassert>
 
@@ -28,7 +29,6 @@ void VertexArray::SetNumInstances(uint32_t instances)
 void VertexArray::AddVertexBuffer(float const * const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex)
 {
 	VertexBuffer buffer;
-	buffer.m_elementsPerVertex = elementsPerVertex;
 
 	glBindVertexArray(m_vertexArrayID);
 
@@ -43,10 +43,45 @@ void VertexArray::AddVertexBuffer(float const * const vertexBuffer, size_t buffe
 	m_vertexBuffers.push_back(buffer);
 }
 
+void VertexArray::AddInstancedVertexBuffer(const std::vector<glm::mat4>& matrices)
+{
+
+	glBindVertexArray(m_vertexArrayID);
+
+	VertexBuffer buffer;
+
+	glGenBuffers(1, &buffer.m_vertexBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer.m_vertexBufferID);
+	glBufferData(GL_ARRAY_BUFFER, matrices.size() * sizeof(glm::mat4), &matrices[0], GL_STATIC_DRAW);
+
+	
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
+
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
+
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
+
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
+
+
+	m_vertexBuffers.push_back(buffer);
+}
+
 void VertexArray::AddInstancedVertexBuffer(float const * const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex, uint32_t attribDivisor)
 {
 	VertexBuffer buffer;
-	buffer.m_elementsPerVertex = elementsPerVertex;
 
 	glBindVertexArray(m_vertexArrayID);
 
