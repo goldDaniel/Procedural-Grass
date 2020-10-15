@@ -236,8 +236,8 @@ int main(int argc, char** argv)
 
         glDisable(GL_CULL_FACE);
         grassShader->Bind();
-        grassShader->SetFloat("windOffset0", glm::sin(elapsed / 2.0f)* glm::sin(elapsed / 2.0f));
-        grassShader->SetFloat("windOffset1", glm::cos(elapsed * 1.618f));
+        grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f)* glm::sin(elapsed + 1.618f));
+        grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
         instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
         instancedRenderable->SetProjectionMatrix(proj);
         renderer.Render(*instancedRenderable);
