@@ -57,7 +57,6 @@ int main(int argc, char** argv)
 
     std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
-
     Camera cam;
     Renderer renderer;
     std::vector<Renderable*> terrainRenderables;
@@ -66,8 +65,8 @@ int main(int argc, char** argv)
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
     
 
-    int chunkDimensions = 16;
-    int size = 32;
+    int chunkDimensions = 32;
+    int size = 8;
     TerrainChunkGenerator gen(chunkDimensions, 512, 2.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -82,8 +81,6 @@ int main(int argc, char** argv)
     for (TerrainMesh* chunk : chunks)
     {        
         VertexArray* vertexArray = renderer.CreateVertexArray();
-
-        
 
         vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
         vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
