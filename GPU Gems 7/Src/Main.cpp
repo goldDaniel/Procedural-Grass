@@ -66,9 +66,9 @@ int main(int argc, char** argv)
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
     
 
-    int chunkDimensions = 32;
+    int chunkDimensions = 16;
     int size = 32;
-    TerrainChunkGenerator gen(chunkDimensions, 512, 4.f);
+    TerrainChunkGenerator gen(chunkDimensions, 512, 2.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
         auto processPosition = [&transforms, &offsetX, &offsetZ](glm::vec3& position)
         {
             glm::mat4 trans = glm::translate(glm::mat4(1.f), glm::vec3( position.x + offsetX,
-                                                                        position.y + 1,
+                                                                        position.y,
                                                                         position.z + offsetZ));
 
             float percent = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -116,6 +116,7 @@ int main(int argc, char** argv)
 
             trans = glm::rotate(trans, rotation, glm::vec3(0, 1, 0));
             trans = glm::scale(trans, glm::vec3(scale, scale, scale));
+            trans = glm::translate(trans, glm::vec3(0, 1, 0));
 
             transforms.push_back(trans);
             
@@ -218,7 +219,7 @@ int main(int argc, char** argv)
 
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
-        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 4000.f);
+        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
 
         renderer.RenderSkybox(skyboxView, proj);
         
