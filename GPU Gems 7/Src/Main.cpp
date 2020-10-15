@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     chunks.clear();
     chunks.shrink_to_fit(); 
 
-   
+    Shader* grassShader = new Shader("Assets/Shaders/GrassVertex.glsl", "Assets/Shaders/GrassFragment.glsl");
     Renderable* instancedRenderable;
     {
         GrassMesh mesh;
@@ -155,8 +155,6 @@ int main(int argc, char** argv)
 
         Texture2D* grass_bilboard = Texture2D::CreateTexture("Assets/Textures/Ground/Grass_Bilboard.png");
 
-        Shader* grassShader = new Shader("Assets/Shaders/GrassVertex.glsl", "Assets/Shaders/GrassFragment.glsl");
-
         instancedRenderable = new Renderable(grassShader, vArray, iBuffer);
         instancedRenderable->AddTexture("grass_bilboard", grass_bilboard);
 
@@ -179,7 +177,7 @@ int main(int argc, char** argv)
     uint32_t prevTime = SDL_GetTicks();
     glm::vec2 prevMousePos = input.GetMousePos();
 
-    float time = 0;
+    float elapsed = 0;
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -188,7 +186,7 @@ int main(int argc, char** argv)
         uint32_t currentTime = SDL_GetTicks();
         float dt = static_cast<float>(currentTime - prevTime) / 1000.f;
         prevTime = currentTime;
-        time += dt / 8.0f;
+        elapsed += dt;
 
         input.Update();
 
@@ -225,7 +223,7 @@ int main(int argc, char** argv)
         renderer.RenderSkybox(skyboxView, proj);
         
         shader->Bind();
-        shader->SetFloat("time", time);
+        shader->SetFloat("time", elapsed);
 
         
         for (Renderable* r : terrainRenderables)
@@ -237,6 +235,9 @@ int main(int argc, char** argv)
         }
 
         glDisable(GL_CULL_FACE);
+        grassShader->Bind();
+        grassShader->SetFloat("windOffset0", glm::sin(elapsed / 2.0f)* glm::sin(elapsed / 2.0f));
+        grassShader->SetFloat("windOffset1", glm::cos(elapsed * 1.618f));
         instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
         instancedRenderable->SetProjectionMatrix(proj);
         renderer.Render(*instancedRenderable);

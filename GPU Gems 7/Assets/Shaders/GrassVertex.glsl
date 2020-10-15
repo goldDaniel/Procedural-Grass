@@ -1,4 +1,3 @@
-
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
@@ -9,6 +8,9 @@ layout (location = 3) in mat4 aTransform;
 
 out vec3 Normal;
 out vec2 TexCoords;
+
+uniform float windOffset0;
+uniform float windOffset1;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -21,7 +23,16 @@ void main()
 	Normal = aNormal;
 	TexCoords = aTexCoord;
 
-	gl_Position = projection * view * aTransform * vec4(aPos, 1.0);
+
+	vec4 posFinal = vec4(aPos, 1.0);
+	
+	if(aTexCoord.y > 0.5)
+	{
+		posFinal.x += sin(windOffset0 + aPos.x);
+		posFinal.z += cos(windOffset1 + aPos.z);
+	}
+
+	gl_Position = projection * view * aTransform * posFinal;
 }
 
 
