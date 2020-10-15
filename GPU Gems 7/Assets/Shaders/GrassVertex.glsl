@@ -28,8 +28,10 @@ void main()
 	
 	if(aTexCoord.y > 0.5)
 	{
-		posFinal.x += sin(windOffset0 + aPos.x);
-		posFinal.z += cos(windOffset1 + aPos.z);
+		vec4 modified = aTransform * posFinal;
+
+		posFinal.x += sin(windOffset0 + modified.x);
+		posFinal.z += cos(windOffset1 + modified.z);
 	}
 
 	gl_Position = projection * view * aTransform * posFinal;
