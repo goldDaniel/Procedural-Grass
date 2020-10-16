@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
     
     
-    TerrainChunkGenerator gen(chunk_dimensions, max_terrain_height, 8.f);
+    TerrainChunkGenerator gen(chunk_dimensions, max_terrain_height, 4.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
@@ -348,6 +348,7 @@ int main(int argc, char** argv)
         {
             glDisable(GL_CULL_FACE);
             grassShader->Bind();
+            grassShader->SetVec3("camPos", cam.Position);
             grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f));
             grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
             instancedRenderable->SetViewMatrix(cam.GetViewMatrix());

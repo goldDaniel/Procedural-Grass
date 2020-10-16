@@ -22,7 +22,6 @@ public:
 	void RenderSkybox(glm::mat4 view, glm::mat4 proj);
 	void Render(const Renderable& renderable) const;
 
-	void RenderInstanced(const Renderable& renderable, uint32_t numInstances) const;
 
 	void RenderWireframes(bool wireframes);
 
@@ -32,7 +31,6 @@ public:
 	Renderable* const CreateRenderable(Shader* shader, VertexArray* v, IndexBuffer* i);
 	Texture2D* const CreateTexture2D(const std::string& filepath);
 
-	void ImGuiRender();
 
 private:
 
