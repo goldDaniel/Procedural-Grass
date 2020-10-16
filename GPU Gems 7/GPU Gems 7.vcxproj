@@ -26,13 +26,19 @@
     <ClCompile Include="Src\Renderer\VertexArray.cpp" />
     <ClCompile Include="Src\Terrain\TerrainMeshGenerator.cpp" />
     <ClCompile Include="Src\Vendor\fastnoise\FastNoise.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\metrics_gui\source\metrics_gui.cpp" />
+    <ClCompile Include="Src\Vendor\imgui\metrics_gui\source\ProggyTiny.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\FragmentShader.glsl" />
     <None Include="Assets\Shaders\GrassFragment.glsl" />
     <None Include="Assets\Shaders\GrassVertex.glsl" />
-    <None Include="Assets\Shaders\InstancingTestFragment.glsl" />
-    <None Include="Assets\Shaders\InstancingTestVertex.glsl" />
     <None Include="Assets\Shaders\SkyboxFragment.glsl" />
     <None Include="Assets\Shaders\SkyboxVertex.glsl" />
     <None Include="Assets\Shaders\VertexShader.glsl" />
@@ -50,6 +56,15 @@
     <ClInclude Include="Src\Terrain\TerrainMeshGenerator.h" />
     <ClInclude Include="Src\Terrain\TerrainMesh.h" />
     <ClInclude Include="Src\Vendor\fastnoise\FastNoise.h" />
+    <ClInclude Include="Src\Vendor\imgui\imconfig.h" />
+    <ClInclude Include="Src\Vendor\imgui\imgui.h" />
+    <ClInclude Include="Src\Vendor\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="Src\Vendor\imgui\imgui_impl_sdl.h" />
+    <ClInclude Include="Src\Vendor\imgui\imgui_internal.h" />
+    <ClInclude Include="Src\Vendor\imgui\imstb_rectpack.h" />
+    <ClInclude Include="Src\Vendor\imgui\imstb_textedit.h" />
+    <ClInclude Include="Src\Vendor\imgui\imstb_truetype.h" />
+    <ClInclude Include="Src\Vendor\imgui\metrics_gui\include\metrics_gui\metrics_gui.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

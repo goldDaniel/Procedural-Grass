@@ -1,3 +1,9 @@
+#include "Vendor/imgui/imgui.h"
+#include "Vendor/imgui/imgui_impl_sdl.h"
+#include "Vendor/imgui/imgui_impl_opengl3.h"
+#include "Vendor/imgui/metrics_gui/include/metrics_gui/metrics_gui.h"
+
+
 #include <algorithm>
 #include <iostream>
 #include <chrono>
@@ -9,23 +15,29 @@
 #include "Vendor/stb_image/stb_image.h"
 
 
+
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 #include <SDL.h>
 
+#include "Camera.h"
+#include "Input.h"
+
+
 #include "Renderer/Texture.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/Shader.h"
-#include "Camera.h"
-#include "Input.h"
 
 
 #include "Terrain/GrassMesh.h"
 #include "Terrain/TerrainMeshGenerator.h"
+
+
+
 
 int main(int argc, char** argv)
 {
@@ -57,6 +69,64 @@ int main(int argc, char** argv)
 
     std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplOpenGL3_Init("#version 150");
+
+
+    bool running = true;
+    Input input([&running]() { running = false; });
+
+
+
+    int chunk_dimensions = 32;
+    int size = 32;
+    int max_terrain_height = 512;
+
+    bool terrain_settings_determined = false;
+    while (!terrain_settings_determined)
+    {
+        input.Update();
+        if (!running) return 0;
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f));
+        ImGui::Begin("Terrain Settings");
+        {
+
+            ImGui::InputInt("Chunk Size", &chunk_dimensions, 2, 64);
+            ImGui::InputInt("Number of Chunks", &size, 2, 64);
+            ImGui::InputInt("Heightmap Scale", &max_terrain_height, 32, 1024);
+
+            if (ImGui::Button("Generate Terrain"))
+            {
+                terrain_settings_determined = true;
+            }
+        }
+
+
+        // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        SDL_GL_SwapWindow(window);
+    }
+
+
+
     Camera cam;
     Renderer renderer;
     std::vector<Renderable*> terrainRenderables;
@@ -65,9 +135,9 @@ int main(int argc, char** argv)
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
     
 
-    int chunkDimensions = 32;
-    int size = 8;
-    TerrainChunkGenerator gen(chunkDimensions, 512, 2.f);
+    
+    
+    TerrainChunkGenerator gen(chunk_dimensions, max_terrain_height, 8.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
@@ -92,13 +162,13 @@ int main(int argc, char** argv)
         renderable->AddTexture("grass", grass);
 
         glm::mat4 model(1.0);
-        model = glm::translate(model, glm::vec3(chunk->chunkX * chunkDimensions, 0, chunk->chunkZ * chunkDimensions));
+        model = glm::translate(model, glm::vec3(chunk->chunkX * chunk_dimensions, 0, chunk->chunkZ * chunk_dimensions));
         renderable->SetModelMatrix(model);
 
         terrainRenderables.push_back(renderable);
 
-        int offsetX = chunk->chunkX * chunkDimensions;
-        int offsetZ = chunk->chunkZ * chunkDimensions;
+        int offsetX = chunk->chunkX * chunk_dimensions;
+        int offsetZ = chunk->chunkZ * chunk_dimensions;
         auto processPosition = [&transforms, &offsetX, &offsetZ](glm::vec3& position)
         {
             glm::mat4 trans = glm::translate(glm::mat4(1.f), glm::vec3( position.x + offsetX,
@@ -147,7 +217,7 @@ int main(int argc, char** argv)
 
         vArray->AddInstancedVertexBuffer(&normals[0].x, sizeof(glm::vec3) * normals.size(), 3, 1);
         vArray->AddInstancedVertexBuffer(transforms);
-        vArray->SetNumInstances(transforms.size());
+        vArray->SetNumInstances(static_cast<uint32_t>(transforms.size()));
 
         IndexBuffer* iBuffer = new IndexBuffer(mesh.indices);
 
@@ -166,12 +236,6 @@ int main(int argc, char** argv)
     normals.clear();
     normals.shrink_to_fit();
 
-
-   
-    bool running = true;
-    Input input([&running]() { running = false; });
-    
-
     uint32_t prevTime = SDL_GetTicks();
     glm::vec2 prevMousePos = input.GetMousePos();
 
@@ -179,14 +243,58 @@ int main(int argc, char** argv)
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+
+
+
+    MetricsGuiMetric frameTimeMetric("Frame time", "s", MetricsGuiMetric::USE_SI_UNIT_PREFIX);
+
+    frameTimeMetric.mSelected = true;
+    MetricsGuiPlot frameTimePlot;
+    frameTimePlot.mShowAverage = true;
+    frameTimePlot.mShowLegendAverage = true;
+    frameTimePlot.mShowLegendColor = false;
+    frameTimePlot.AddMetric(&frameTimeMetric);
+
     while(running) 
     {
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
+
+
+
         uint32_t currentTime = SDL_GetTicks();
         float dt = static_cast<float>(currentTime - prevTime) / 1000.f;
         prevTime = currentTime;
         elapsed += dt;
 
+        frameTimeMetric.AddNewValue(dt);
+        frameTimePlot.UpdateAxes();
+
         input.Update();
+
+
+        static bool render_grass = true;
+        static bool render_terrain = true;
+        static bool render_skybox = true;
+        ImGui::Begin("Debug");
+        {
+
+            ImGui::Checkbox("Render Grass", &render_grass);
+            ImGui::Checkbox("Render Terrain", &render_terrain);
+            ImGui::Checkbox("Render Skybox", &render_skybox);
+            ImGui::Spacing();
+
+            if (ImGui::CollapsingHeader("FrameTime Info", ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Separator();
+                frameTimePlot.DrawHistory();
+            }
+        }
+        ImGui::End();
+
+
 
       
         glm::vec2 mousePos = input.GetMousePos();
@@ -218,29 +326,42 @@ int main(int argc, char** argv)
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
         glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
 
-        renderer.RenderSkybox(skyboxView, proj);
-        
-        shader->Bind();
-        shader->SetFloat("time", elapsed);
-
-        
-        for (Renderable* r : terrainRenderables)
+        if (render_skybox)
         {
-            r->SetViewMatrix(cam.GetViewMatrix());
-            r->SetProjectionMatrix(proj);
+            renderer.RenderSkybox(skyboxView, proj);
+        }
+        
+        if (render_terrain)
+        {
+            shader->Bind();
+            shader->SetFloat("time", elapsed);
+            for (Renderable* r : terrainRenderables)
+            {
+                r->SetViewMatrix(cam.GetViewMatrix());
+                r->SetProjectionMatrix(proj);
 
-            renderer.Render(*r);
+                renderer.Render(*r);
+            }
         }
 
-        glDisable(GL_CULL_FACE);
-        grassShader->Bind();
-        grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f)* glm::sin(elapsed + 1.618f));
-        grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
-        instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
-        instancedRenderable->SetProjectionMatrix(proj);
-        renderer.Render(*instancedRenderable);
-        glEnable(GL_CULL_FACE);
+        if (render_grass)
+        {
+            glDisable(GL_CULL_FACE);
+            grassShader->Bind();
+            grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f));
+            grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
+            instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
+            instancedRenderable->SetProjectionMatrix(proj);
+            renderer.Render(*instancedRenderable);
+            glEnable(GL_CULL_FACE);
+        }
 
+        
+        
+
+        // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(window);
     }

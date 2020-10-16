@@ -182,14 +182,14 @@ Renderable* Renderer::CreateSkyboxRenderable()
 {
 	std::vector<std::string> cubemap_faces =
 	{
-		"Assets/Textures/Skybox/graycloud_ft.jpg",
-		"Assets/Textures/Skybox/graycloud_bk.jpg",
-
-		"Assets/Textures/Skybox/graycloud_up.jpg",
-		"Assets/Textures/Skybox/graycloud_dn.jpg",
-
-		"Assets/Textures/Skybox/graycloud_rt.jpg",
-		"Assets/Textures/Skybox/graycloud_lf.jpg",
+		"Assets/Textures/Skybox/bluecloud_ft.jpg",
+		"Assets/Textures/Skybox/bluecloud_bk.jpg",
+								
+		"Assets/Textures/Skybox/bluecloud_up.jpg",
+		"Assets/Textures/Skybox/bluecloud_dn.jpg",
+								
+		"Assets/Textures/Skybox/bluecloud_rt.jpg",
+		"Assets/Textures/Skybox/bluecloud_lf.jpg",
 	};
 
 	std::vector<float> skybox_vertices = {

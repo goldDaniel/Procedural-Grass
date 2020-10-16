@@ -32,6 +32,8 @@ public:
 	Renderable* const CreateRenderable(Shader* shader, VertexArray* v, IndexBuffer* i);
 	Texture2D* const CreateTexture2D(const std::string& filepath);
 
+	void ImGuiRender();
+
 private:
 
 	unsigned int loadCubemap(std::vector<std::string> faces);

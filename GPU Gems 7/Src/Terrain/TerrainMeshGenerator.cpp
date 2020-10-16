@@ -31,9 +31,9 @@ std::vector<TerrainMesh*> TerrainChunkGenerator::GenerateChunkSet(int size) cons
 	
 	std::vector<std::future<TerrainMesh*>> futures;
 
-	for (int x = -size; x < size; ++x)
+	for (int x = -size / 2; x < size / 2; ++x)
 	{
-		for (int z = -size; z < size; ++z)
+		for (int z = -size / 2; z < size / 2; ++z)
 		{
 			futures.push_back(std::async(GenerateChunk, noise, x, z, chunkDimensions, maxHeight, scale));
 		}
