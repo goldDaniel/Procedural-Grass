@@ -6,20 +6,18 @@
 
 Renderer::Renderer()
 {
-	skyboxRenderable = CreateSkyboxRenderable();
+	skybox_renderable = CreateSkyboxRenderable();
 	glClearColor(0, 0, 0, 1);
-
-	glEnable(GL_BLEND);
 }
 
 Renderer::~Renderer()
 {
-	for (IndexBuffer* i : indexBuffers)
+	for (IndexBuffer* i : index_buffers)
 	{
 		delete i;
 	}
 
-	for (VertexArray* v : vertexArrays)
+	for (VertexArray* v : vertex_arrays)
 	{
 		delete v;
 	}
@@ -43,20 +41,20 @@ void Renderer::Clear()
 void Renderer::RenderSkybox(glm::mat4 view, glm::mat4 proj)
 {
 	glDepthFunc(GL_LEQUAL);
-	skyboxRenderable->shader->Bind();
-	skyboxRenderable->shader->SetMat4("projection", proj);
-	skyboxRenderable->shader->SetMat4("view", view);
+	skybox_renderable->shader->Bind();
+	skybox_renderable->shader->SetMat4("projection", proj);
+	skybox_renderable->shader->SetMat4("view", view);
 
 
-	glBindVertexArray(skyboxRenderable->vArray->GetID());
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxRenderable->iBuffer->GetID());
+	glBindVertexArray(skybox_renderable->vertex_array->GetID());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox_renderable->index_buffer->GetID());
 
 
-	skyboxRenderable->shader->SetInt("skybox", 0);
+	skybox_renderable->shader->SetInt("skybox", 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_cubemap);
 
-	glDrawElements(GL_TRIANGLES, skyboxRenderable->iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, skybox_renderable->index_buffer->GetNumElements(), GL_UNSIGNED_INT, 0);
 
 	glDepthFunc(GL_LESS);
 }
@@ -72,22 +70,22 @@ void Renderer::Render(const Renderable& renderable) const
 
 	for (uint32_t i = 0; i < renderable.textures.size(); i++)
 	{
-		renderable.shader->SetInt(renderable.textureNames[i], i);
+		renderable.shader->SetInt(renderable.texture_names[i], i);
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, renderable.textures[i]->GetID());
 	}
 
-	glBindVertexArray(renderable.vArray->GetID());
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderable.iBuffer->GetID());
+	glBindVertexArray(renderable.vertex_array->GetID());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderable.index_buffer->GetID());
 
-	uint32_t instances = renderable.vArray->m_instances;
+	uint32_t instances = renderable.vertex_array->instances;
 	if (instances > 0)
 	{
-		glDrawElementsInstanced(GL_TRIANGLES, renderable.iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0, instances);
+		glDrawElementsInstanced(GL_TRIANGLES, renderable.index_buffer->GetNumElements(), GL_UNSIGNED_INT, 0, instances);
 	}
 	else
 	{
-		glDrawElements(GL_TRIANGLES, renderable.iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderable.index_buffer->GetNumElements(), GL_UNSIGNED_INT, 0);
 	}
 }
 
@@ -108,7 +106,7 @@ void Renderer::RenderWireframes(bool wireframes)
 VertexArray* const Renderer::CreateVertexArray()
 {
 	auto resource = new VertexArray();
-	vertexArrays.push_back(resource);
+	vertex_arrays.push_back(resource);
 
 	return resource;
 }
@@ -116,7 +114,7 @@ VertexArray* const Renderer::CreateVertexArray()
 IndexBuffer* const Renderer::CreateIndexBuffer(const std::vector<unsigned int>& indices)
 {
 	auto resource = new IndexBuffer(indices);
-	indexBuffers.push_back(resource);
+	index_buffers.push_back(resource);
 
 	return resource;
 }
@@ -250,8 +248,8 @@ Renderable* Renderer::CreateSkyboxRenderable()
 	IndexBuffer* skybox_iBuffer = CreateIndexBuffer(skybox_indices);
 
 
-	skyboxCubemap = loadCubemap(cubemap_faces);
-	skyboxRenderable = CreateRenderable(skybox_shader, skybox_vArray, skybox_iBuffer);
+	skybox_cubemap = loadCubemap(cubemap_faces);
+	skybox_renderable = CreateRenderable(skybox_shader, skybox_vArray, skybox_iBuffer);
 	
-	return skyboxRenderable;
+	return skybox_renderable;
 }
