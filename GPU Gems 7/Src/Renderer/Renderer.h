@@ -37,14 +37,14 @@ private:
 	unsigned int loadCubemap(std::vector<std::string> faces);
 	Renderable* CreateSkyboxRenderable();
 
-	unsigned int skybox_cubemap;
-	Renderable* skybox_renderable;
+	unsigned int skyboxCubemap;
+	Renderable* skyboxRenderable;
 
 	
 
 	std::vector<Shader*> shaders;
-	std::vector<VertexArray*> vertex_arrays;
-	std::vector<IndexBuffer*> index_buffers;
+	std::vector<VertexArray*> vertexArrays;
+	std::vector<IndexBuffer*> indexBuffers;
 };
 
 #endif

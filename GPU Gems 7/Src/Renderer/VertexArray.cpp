@@ -6,101 +6,101 @@
 
 
 VertexArray::VertexArray() 
-	: instances(0)
+	: m_instances(0)
 {
-	glGenVertexArrays(1, &vertex_array_ID);
+	glGenVertexArrays(1, &m_vertexArrayID);
 }
 
 VertexArray::~VertexArray()
 {
-	for (VertexBuffer& b : vertex_buffers)
+	for (VertexBuffer& b : m_vertexBuffers)
 	{
-		glDeleteBuffers(1, &b.buffer_ID);
+		glDeleteBuffers(1, &b.m_vertexBufferID);
 	}
 
-	glDeleteVertexArrays(1, &vertex_array_ID);
+	glDeleteVertexArrays(1, &m_vertexArrayID);
 }
 
 void VertexArray::SetNumInstances(uint32_t instances)
 {
-	instances = instances;
+	m_instances = instances;
 }
 
 void VertexArray::AddVertexBuffer(float const * const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex)
 {
 	VertexBuffer buffer;
 
-	glBindVertexArray(vertex_array_ID);
+	glBindVertexArray(m_vertexArrayID);
 
-	glGenBuffers(1, &buffer.buffer_ID);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer.buffer_ID);
+	glGenBuffers(1, &buffer.m_vertexBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer.m_vertexBufferID);
 	glBufferData(GL_ARRAY_BUFFER, bufferSizeBytes, &vertexBuffer[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(vertex_buffer_index);
-	glVertexAttribPointer(vertex_buffer_index, elementsPerVertex, GL_FLOAT, false, elementsPerVertex * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, elementsPerVertex, GL_FLOAT, false, elementsPerVertex * sizeof(float), (void*)0);
 
-	vertex_buffer_index++;
-	vertex_buffers.push_back(buffer);
+	m_VertexBufferIndex++;
+	m_vertexBuffers.push_back(buffer);
 }
 
 void VertexArray::AddInstancedVertexBuffer(const std::vector<glm::mat4>& matrices)
 {
 
-	glBindVertexArray(vertex_array_ID);
+	glBindVertexArray(m_vertexArrayID);
 
 	VertexBuffer buffer;
 
-	glGenBuffers(1, &buffer.buffer_ID);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer.buffer_ID);
+	glGenBuffers(1, &buffer.m_vertexBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer.m_vertexBufferID);
 	glBufferData(GL_ARRAY_BUFFER, matrices.size() * sizeof(glm::mat4), &matrices[0], GL_STATIC_DRAW);
 
 	
-	glEnableVertexAttribArray(vertex_buffer_index);
-	glVertexAttribPointer(vertex_buffer_index, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	glVertexAttribDivisor(vertex_buffer_index, 1);
-	vertex_buffer_index++;
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
 
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(vertex_buffer_index, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-	glVertexAttribDivisor(vertex_buffer_index, 1);
-	vertex_buffer_index++;
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
 
-	glEnableVertexAttribArray(vertex_buffer_index);
-	glVertexAttribPointer(vertex_buffer_index, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-	glVertexAttribDivisor(vertex_buffer_index, 1);
-	vertex_buffer_index++;
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
 
-	glEnableVertexAttribArray(vertex_buffer_index);
-	glVertexAttribPointer(vertex_buffer_index, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-	glVertexAttribDivisor(vertex_buffer_index, 1);
-	vertex_buffer_index++;
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribDivisor(m_VertexBufferIndex, 1);
+	m_VertexBufferIndex++;
 
 
-	vertex_buffers.push_back(buffer);
+	m_vertexBuffers.push_back(buffer);
 }
 
 void VertexArray::AddInstancedVertexBuffer(float const * const vertexBuffer, size_t bufferSizeBytes, uint32_t elementsPerVertex, uint32_t attribDivisor)
 {
 	VertexBuffer buffer;
 
-	glBindVertexArray(vertex_array_ID);
+	glBindVertexArray(m_vertexArrayID);
 
-	glGenBuffers(1, &buffer.buffer_ID);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer.buffer_ID);
+	glGenBuffers(1, &buffer.m_vertexBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer.m_vertexBufferID);
 	glBufferData(GL_ARRAY_BUFFER, bufferSizeBytes, &vertexBuffer[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(vertex_buffer_index);
-	glVertexAttribPointer(vertex_buffer_index, elementsPerVertex, GL_FLOAT, false, elementsPerVertex * sizeof(float), (void*)0);
-	glVertexAttribDivisor(vertex_buffer_index, attribDivisor);
+	glEnableVertexAttribArray(m_VertexBufferIndex);
+	glVertexAttribPointer(m_VertexBufferIndex, elementsPerVertex, GL_FLOAT, false, elementsPerVertex * sizeof(float), (void*)0);
+	glVertexAttribDivisor(m_VertexBufferIndex, attribDivisor);
 
-	vertex_buffer_index++;
-	vertex_buffers.push_back(buffer);
+	m_VertexBufferIndex++;
+	m_vertexBuffers.push_back(buffer);
 }
 
 
 void VertexArray::Bind() const
 {
-	glBindVertexArray(vertex_array_ID);
+	glBindVertexArray(m_vertexArrayID);
 }
 
 void VertexArray::Unbind() const
@@ -110,5 +110,5 @@ void VertexArray::Unbind() const
 
 uint32_t VertexArray::GetID() const
 {
-	return vertex_array_ID;
+	return m_vertexArrayID;
 }

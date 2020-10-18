@@ -1,17 +1,17 @@
 #include "Renderable.h"
 
-Renderable::Renderable(	const Shader* const shader,
-						const VertexArray* const v,
-						const IndexBuffer* const i)
+Renderable::Renderable(const Shader* const shader,
+	const VertexArray* const v,
+	const IndexBuffer* const i)
 
-	: shader(shader), vertex_array(v), index_buffer(i)
+	: shader(shader), vArray(v), iBuffer(i)
 {}
 
 Renderable::~Renderable() {}
 
 void Renderable::AddTexture(const std::string& uniformName, Texture2D* const texture)
 {
-	texture_names.push_back(uniformName);
+	textureNames.push_back(uniformName);
 	textures.push_back(texture);
 }
 
@@ -32,6 +32,6 @@ void Renderable::SetProjectionMatrix(const glm::mat4& proj)
 
 void Renderable::Bind()
 {
-	vertex_array->Bind();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->GetID());
+	vArray->Bind();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetID());
 }
