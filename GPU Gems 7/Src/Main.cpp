@@ -36,27 +36,41 @@
 #include "Terrain/GrassMesh.h"
 #include "Terrain/TerrainMeshGenerator.h"
 
+struct TerrainSettings
+{
+    int chunk_dimensions = 32;
+    int size = 32;
+    int max_terrain_height = 512;
+};
+TerrainSettings settings;
 
 
+std::unique_ptr<Renderer> renderer;
+std::unique_ptr<Input> input;
 
-int main(int argc, char** argv)
+SDL_Window* window;
+SDL_GLContext gl_context;
+
+bool running = true;
+
+void InitializeWindow(int windowW, int windowH)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
-        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: "<< SDL_GetError() << std::endl;
+        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
 
-    SDL_Window* window = SDL_CreateWindow(
-        "Procedural Grass",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        800, 600, SDL_WINDOW_SHOWN |
-        SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow(
+                            "Procedural Grass",
+                            SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED,
+                            windowW, windowH, 
+                            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     SDL_SetWindowResizable(window, (SDL_bool)true);
 
 
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    gl_context = SDL_GL_CreateContext(window);
 
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
@@ -70,28 +84,23 @@ int main(int argc, char** argv)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init("#version 150");
+}
 
-
-    bool running = true;
-    Input input([&running]() { running = false; });
-
-
-
-    int chunk_dimensions = 32;
-    int size = 32;
-    int max_terrain_height = 512;
+bool DetermineTerrainSettings(const ImGuiIO& io)
+{
+    
 
     bool terrain_settings_determined = false;
     while (!terrain_settings_determined)
     {
-        input.Update();
-        if (!running) return 0;
+        input->Update();
+        if (!running) return false;
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -105,9 +114,9 @@ int main(int argc, char** argv)
         ImGui::Begin("Terrain Settings");
         {
 
-            ImGui::InputInt("Chunk Size", &chunk_dimensions, 2, 64);
-            ImGui::InputInt("Number of Chunks", &size, 2, 64);
-            ImGui::InputInt("Heightmap Scale", &max_terrain_height, 32, 1024);
+            ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
+            ImGui::InputInt("Number of Chunks", &settings.size, 2, 64);
+            ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 1024);
 
             if (ImGui::Button("Generate Terrain"))
             {
@@ -122,20 +131,36 @@ int main(int argc, char** argv)
         SDL_GL_SwapWindow(window);
     }
 
+    return true;
+}
+
+
+int main(int argc, char** argv)
+{
+    InitializeWindow(1280, 720);
+    const ImGuiIO& io = ImGui::GetIO(); (void)io;
+    
+    renderer = std::make_unique<Renderer>();
+
+    input = std::make_unique<Input>([]() { running = false; });
+
+    if (!DetermineTerrainSettings(io))
+    {
+        return 0;
+    }
 
 
     Camera cam;
-    Renderer renderer;
     std::vector<Renderable*> terrainRenderables;
 
-    Shader* shader = renderer.CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
+    Shader* shader = renderer->CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
 
     
-    TerrainChunkGenerator gen(chunk_dimensions, max_terrain_height, 4.f);
+    TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
-    std::vector<std::shared_ptr<TerrainMesh>> chunks = gen.GenerateChunkSet(size);
+    std::vector<std::shared_ptr<TerrainMesh>> chunks = gen.GenerateChunkSet(settings.size);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds > (t2 - t1).count();
     std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
@@ -145,25 +170,25 @@ int main(int argc, char** argv)
 
     for (std::shared_ptr<TerrainMesh> chunk : chunks)
     {        
-        VertexArray* vertexArray = renderer.CreateVertexArray();
+        VertexArray* vertexArray = renderer->CreateVertexArray();
 
         vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
         vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
         vertexArray->AddVertexBuffer(&chunk->texCoords[0].x, sizeof(glm::vec2) * chunk->texCoords.size(), 2);
 
-        IndexBuffer* iBuffer = renderer.CreateIndexBuffer(chunk->indices);
+        IndexBuffer* iBuffer = renderer->CreateIndexBuffer(chunk->indices);
 
-        Renderable* renderable = renderer.CreateRenderable(shader, vertexArray, iBuffer); 
+        Renderable* renderable = renderer->CreateRenderable(shader, vertexArray, iBuffer);
         renderable->AddTexture("grass", grass);
 
         glm::mat4 model(1.0);
-        model = glm::translate(model, glm::vec3(chunk->chunkX * chunk_dimensions, 0, chunk->chunkZ * chunk_dimensions));
+        model = glm::translate(model, glm::vec3(chunk->chunkX * settings.chunk_dimensions, 0, chunk->chunkZ * settings.chunk_dimensions));
         renderable->SetModelMatrix(model);
 
         terrainRenderables.push_back(renderable);
 
-        int offsetX = chunk->chunkX * chunk_dimensions;
-        int offsetZ = chunk->chunkZ * chunk_dimensions;
+        int offsetX = chunk->chunkX * settings.chunk_dimensions;
+        int offsetZ = chunk->chunkZ * settings.chunk_dimensions;
         auto processPosition = [&transforms, &offsetX, &offsetZ](glm::vec3& position)
         {
             glm::mat4 trans = glm::translate(glm::mat4(1.f), glm::vec3( position.x + offsetX,
@@ -230,7 +255,7 @@ int main(int argc, char** argv)
     normals.shrink_to_fit();
 
     uint32_t prevTime = SDL_GetTicks();
-    glm::vec2 prevMousePos = input.GetMousePos();
+    glm::vec2 prevMousePos = input->GetMousePos();
 
     float elapsed = 0;
 
@@ -261,7 +286,7 @@ int main(int argc, char** argv)
         frameTimeMetric.AddNewValue(dt);
         frameTimePlot.UpdateAxes();
 
-        input.Update();
+        input->Update();
 
         static bool render_grass = true;
         static bool render_terrain = true;
@@ -284,24 +309,24 @@ int main(int argc, char** argv)
         ImGui::End();
 
 
-        glm::vec2 mousePos = input.GetMousePos();
+        glm::vec2 mousePos = input->GetMousePos();
         glm::vec2 mouseDelta = mousePos - prevMousePos;
         prevMousePos = mousePos;
 
-        if (input.IsButtonDown(SDL_BUTTON_LEFT))
+        if (input->IsButtonDown(SDL_BUTTON_LEFT))
         {
             cam.ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
         }
 
         float speed = 64;
-        if (input.IsKeyDown(SDLK_a)) cam.ProcessKeyboard(Camera_Movement::LEFT, dt);
-        if (input.IsKeyDown(SDLK_d)) cam.ProcessKeyboard(Camera_Movement::RIGHT, dt);
+        if (input->IsKeyDown(SDLK_a)) cam.ProcessKeyboard(Camera_Movement::LEFT, dt);
+        if (input->IsKeyDown(SDLK_d)) cam.ProcessKeyboard(Camera_Movement::RIGHT, dt);
         
-        if (input.IsKeyDown(SDLK_w)) cam.ProcessKeyboard(Camera_Movement::FORWARD, dt);
-        if (input.IsKeyDown(SDLK_s)) cam.ProcessKeyboard(Camera_Movement::BACKWARD, dt);
+        if (input->IsKeyDown(SDLK_w)) cam.ProcessKeyboard(Camera_Movement::FORWARD, dt);
+        if (input->IsKeyDown(SDLK_s)) cam.ProcessKeyboard(Camera_Movement::BACKWARD, dt);
         
-        if (input.IsKeyDown(SDLK_LSHIFT)) cam.ProcessKeyboard(Camera_Movement::DOWN, dt);
-        if (input.IsKeyDown(SDLK_SPACE)) cam.ProcessKeyboard(Camera_Movement::UP, dt);
+        if (input->IsKeyDown(SDLK_LSHIFT)) cam.ProcessKeyboard(Camera_Movement::DOWN, dt);
+        if (input->IsKeyDown(SDLK_SPACE)) cam.ProcessKeyboard(Camera_Movement::UP, dt);
         
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -315,7 +340,7 @@ int main(int argc, char** argv)
 
         if (render_skybox)
         {
-            renderer.RenderSkybox(skyboxView, proj);
+            renderer->RenderSkybox(skyboxView, proj);
         }
         
         if (render_terrain)
@@ -327,7 +352,7 @@ int main(int argc, char** argv)
                 r->SetViewMatrix(cam.GetViewMatrix());
                 r->SetProjectionMatrix(proj);
 
-                renderer.Render(*r);
+                renderer->Render(*r);
             }
         }
 
@@ -339,7 +364,7 @@ int main(int argc, char** argv)
             grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
             instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
             instancedRenderable->SetProjectionMatrix(proj);
-            renderer.Render(*instancedRenderable);
+            renderer->Render(*instancedRenderable);
         }
 
 
