@@ -43,9 +43,7 @@ int main(int argc, char** argv)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
-        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: "
-            << SDL_GetError()
-            << std::endl;
+        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: "<< SDL_GetError() << std::endl;
         exit(1);
     }
 
@@ -117,7 +115,6 @@ int main(int argc, char** argv)
             }
         }
 
-
         // Rendering
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -133,14 +130,12 @@ int main(int argc, char** argv)
 
     Shader* shader = renderer.CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
     Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
-    
 
-    
     
     TerrainChunkGenerator gen(chunk_dimensions, max_terrain_height, 4.f);
     std::cout << "Beginning terrain generation..." << std::endl;
     auto t1 = std::chrono::high_resolution_clock::now();
-    std::vector<TerrainMesh*> chunks = gen.GenerateChunkSet(size);
+    std::vector<std::shared_ptr<TerrainMesh>> chunks = gen.GenerateChunkSet(size);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds > (t2 - t1).count();
     std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
@@ -148,7 +143,7 @@ int main(int argc, char** argv)
     std::vector<glm::mat4> transforms;
     std::vector<glm::vec3> normals;
 
-    for (TerrainMesh* chunk : chunks)
+    for (std::shared_ptr<TerrainMesh> chunk : chunks)
     {        
         VertexArray* vertexArray = renderer.CreateVertexArray();
 
@@ -186,13 +181,10 @@ int main(int argc, char** argv)
             trans = glm::translate(trans, glm::vec3(0, 1, 0));
 
             transforms.push_back(trans);
-            
         };
 
         std::for_each(chunk->positions.begin(), chunk->positions.end(), processPosition);
         normals.insert(normals.end(), chunk->normals.begin(), chunk->normals.end());
-
-        delete chunk;
     }    
     chunks.clear();
     chunks.shrink_to_fit(); 
@@ -227,6 +219,7 @@ int main(int argc, char** argv)
         instancedRenderable->AddTexture("grass_bilboard", grass_bilboard);
 
         instancedRenderable->SetModelMatrix(glm::mat4(1.f));
+        instancedRenderable->SetRenderBackface(true);
         
         scales.clear();
         scales.shrink_to_fit();
@@ -245,24 +238,20 @@ int main(int argc, char** argv)
     glEnable(GL_DEPTH_TEST);
 
 
-
     MetricsGuiMetric frameTimeMetric("Frame time", "s", MetricsGuiMetric::USE_SI_UNIT_PREFIX);
-
     frameTimeMetric.mSelected = true;
     MetricsGuiPlot frameTimePlot;
     frameTimePlot.mShowAverage = true;
     frameTimePlot.mShowLegendAverage = true;
     frameTimePlot.mShowLegendColor = false;
     frameTimePlot.AddMetric(&frameTimeMetric);
-
+    
     while(running) 
     {
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
-
-
 
         uint32_t currentTime = SDL_GetTicks();
         float dt = static_cast<float>(currentTime - prevTime) / 1000.f;
@@ -274,10 +263,10 @@ int main(int argc, char** argv)
 
         input.Update();
 
-
         static bool render_grass = true;
         static bool render_terrain = true;
         static bool render_skybox = true;
+
         ImGui::Begin("Debug");
         {
 
@@ -295,8 +284,6 @@ int main(int argc, char** argv)
         ImGui::End();
 
 
-
-      
         glm::vec2 mousePos = input.GetMousePos();
         glm::vec2 mouseDelta = mousePos - prevMousePos;
         prevMousePos = mousePos;
@@ -305,6 +292,7 @@ int main(int argc, char** argv)
         {
             cam.ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
         }
+
         float speed = 64;
         if (input.IsKeyDown(SDLK_a)) cam.ProcessKeyboard(Camera_Movement::LEFT, dt);
         if (input.IsKeyDown(SDLK_d)) cam.ProcessKeyboard(Camera_Movement::RIGHT, dt);
@@ -321,7 +309,6 @@ int main(int argc, char** argv)
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
         glViewport(0, 0, w, h);
-
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
         glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
@@ -346,7 +333,6 @@ int main(int argc, char** argv)
 
         if (render_grass)
         {
-            glDisable(GL_CULL_FACE);
             grassShader->Bind();
             grassShader->SetVec3("camPos", cam.Position);
             grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f));
@@ -354,13 +340,9 @@ int main(int argc, char** argv)
             instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
             instancedRenderable->SetProjectionMatrix(proj);
             renderer.Render(*instancedRenderable);
-            glEnable(GL_CULL_FACE);
         }
 
-        
-        
 
-        // Rendering
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -369,7 +351,6 @@ int main(int argc, char** argv)
 
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
-
     SDL_Quit();
 
     return 0;

@@ -25,6 +25,8 @@ private:
 	std::vector<std::string> textureNames;
 	std::vector<Texture2D*> textures;
 
+	bool render_backface;
+
 public:
 	Renderable(const Shader* const shader,
 		const VertexArray* const v,
@@ -39,6 +41,8 @@ public:
 	void SetModelMatrix(const glm::mat4& model);
 	void SetViewMatrix(const glm::mat4& view);
 	void SetProjectionMatrix(const glm::mat4& proj);
+
+	void SetRenderBackface(bool enabled);
 };
 
 #endif

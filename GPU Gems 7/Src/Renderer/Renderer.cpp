@@ -63,6 +63,15 @@ void Renderer::RenderSkybox(glm::mat4 view, glm::mat4 proj)
 
 void Renderer::Render(const Renderable& renderable) const
 {
+	if (renderable.render_backface)
+	{
+		glDisable(GL_CULL_FACE);
+	}
+	else
+	{
+		glDisable(GL_CULL_FACE);
+	}
+
 	renderable.shader->Bind();
 
 	renderable.shader->SetMat4("model", renderable.model);

@@ -4,8 +4,10 @@ Renderable::Renderable(const Shader* const shader,
 	const VertexArray* const v,
 	const IndexBuffer* const i)
 
-	: shader(shader), vArray(v), iBuffer(i)
-{}
+	: shader(shader), vArray(v), iBuffer(i), render_backface(false)
+{
+
+}
 
 Renderable::~Renderable() {}
 
@@ -35,3 +37,9 @@ void Renderable::Bind()
 	vArray->Bind();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetID());
 }
+
+void Renderable::SetRenderBackface(bool enabled)
+{
+	render_backface = enabled;
+}
+

@@ -3,9 +3,11 @@
 #include <glm/glm.hpp>
 #include <future>
 
+#include <memory>
+
 #include "Vendor/fastnoise/FastNoise.h"
 
-static TerrainMesh* GenerateChunk(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale);
+static std::shared_ptr<TerrainMesh> GenerateChunk(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale);
 
 
 
@@ -19,9 +21,9 @@ TerrainChunkGenerator::~TerrainChunkGenerator()
 
 }
 
-std::vector<TerrainMesh*> TerrainChunkGenerator::GenerateChunkSet(int size) const
+std::vector<std::shared_ptr<TerrainMesh>> TerrainChunkGenerator::GenerateChunkSet(int size) const
 {
-	std::vector<TerrainMesh*> result;
+	std::vector<std::shared_ptr<TerrainMesh>> result;
 
 	FastNoise noise;
 	noise.SetFrequency(0.003);
@@ -29,7 +31,7 @@ std::vector<TerrainMesh*> TerrainChunkGenerator::GenerateChunkSet(int size) cons
 
 #if 1
 	
-	std::vector<std::future<TerrainMesh*>> futures;
+	std::vector<std::future<std::shared_ptr<TerrainMesh>>> futures;
 
 	for (int x = -size / 2; x < size / 2; ++x)
 	{
@@ -50,15 +52,15 @@ std::vector<TerrainMesh*> TerrainChunkGenerator::GenerateChunkSet(int size) cons
 		{
 			result.push_back(GenerateChunk(noise, x, z, chunkDimensions, maxHeight));
 		}
-	}
+	} 
 #endif
 
 	return result;
 }
 
-static TerrainMesh* GenerateChunk(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
+static std::shared_ptr<TerrainMesh> GenerateChunk(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
 {
-	TerrainMesh* result = new TerrainMesh();
+	std::shared_ptr<TerrainMesh> result = std::make_shared<TerrainMesh>();
 
 	result->chunkX = static_cast<int>(chunkX * scale);
 	result->chunkZ = static_cast<int>(chunkZ * scale);
@@ -66,7 +68,7 @@ static TerrainMesh* GenerateChunk(const FastNoise noise, int chunkX, int chunkZ,
 	result->normals.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 	result->texCoords.reserve(2 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 
-	int padding = 1;
+	int padding = 0;
 
 	float finalChunkSize = (chunkDimensions + padding) / 2.f;
 
@@ -95,8 +97,6 @@ static TerrainMesh* GenerateChunk(const FastNoise noise, int chunkX, int chunkZ,
 				(x - startX) / (endX - startX),
 				(z - startZ) / (endZ - startZ)
 			};
-
-			
 
 			result->positions.push_back(pos0);
 			result->normals.push_back(normal);
