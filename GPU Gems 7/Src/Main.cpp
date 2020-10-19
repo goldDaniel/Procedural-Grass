@@ -53,87 +53,10 @@ SDL_GLContext gl_context;
 
 bool running = true;
 
-void InitializeWindow(int windowW, int windowH)
-{
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: " << SDL_GetError() << std::endl;
-        exit(1);
-    }
+void InitializeWindow(int windowW, int windowH);
+bool DetermineTerrainSettings(const ImGuiIO& io);
 
-    window = SDL_CreateWindow(
-                            "Procedural Grass",
-                            SDL_WINDOWPOS_CENTERED,
-                            SDL_WINDOWPOS_CENTERED,
-                            windowW, windowH, 
-                            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-    SDL_SetWindowResizable(window, (SDL_bool)true);
-
-
-    gl_context = SDL_GL_CreateContext(window);
-
-
-    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
-    {
-        std::cerr << "Failed to initialize the OpenGL context." << std::endl;
-        exit(1);
-    }
-
-    std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
-
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    
-    ImGui::StyleColorsDark();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-    ImGui_ImplOpenGL3_Init("#version 150");
-}
-
-bool DetermineTerrainSettings(const ImGuiIO& io)
-{
-    
-
-    bool terrain_settings_determined = false;
-    while (!terrain_settings_determined)
-    {
-        input->Update();
-        if (!running) return false;
-
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(window);
-        ImGui::NewFrame();
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f));
-        ImGui::Begin("Terrain Settings");
-        {
-
-            ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
-            ImGui::InputInt("Number of Chunks", &settings.size, 2, 64);
-            ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 1024);
-
-            if (ImGui::Button("Generate Terrain"))
-            {
-                terrain_settings_determined = true;
-            }
-        }
-
-        // Rendering
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        SDL_GL_SwapWindow(window);
-    }
-
-    return true;
-}
-
+Renderable* GenerateChunkRenderable(TerrainMesh const* const chunk, Shader* const shader, Texture2D* const grass, glm::mat4 const& model);
 
 int main(int argc, char** argv)
 {
@@ -141,14 +64,12 @@ int main(int argc, char** argv)
     const ImGuiIO& io = ImGui::GetIO(); (void)io;
     
     renderer = std::make_unique<Renderer>();
-
     input = std::make_unique<Input>([]() { running = false; });
 
     if (!DetermineTerrainSettings(io))
     {
         return 0;
     }
-
 
     Camera cam;
     std::vector<Renderable*> terrainRenderables;
@@ -158,34 +79,19 @@ int main(int argc, char** argv)
 
     
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
-    std::cout << "Beginning terrain generation..." << std::endl;
-    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<std::shared_ptr<TerrainMesh>> chunks = gen.GenerateChunkSet(settings.size);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds > (t2 - t1).count();
-    std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
-
+    
     std::vector<glm::mat4> transforms;
     std::vector<glm::vec3> normals;
 
-    for (std::shared_ptr<TerrainMesh> chunk : chunks)
+    for (auto chunk : chunks)
     {        
-        VertexArray* vertexArray = renderer->CreateVertexArray();
-
-        vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
-        vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
-        vertexArray->AddVertexBuffer(&chunk->texCoords[0].x, sizeof(glm::vec2) * chunk->texCoords.size(), 2);
-
-        IndexBuffer* iBuffer = renderer->CreateIndexBuffer(chunk->indices);
-
-        Renderable* renderable = renderer->CreateRenderable(shader, vertexArray, iBuffer);
-        renderable->AddTexture("grass", grass);
-
         glm::mat4 model(1.0);
         model = glm::translate(model, glm::vec3(chunk->chunkX * settings.chunk_dimensions, 0, chunk->chunkZ * settings.chunk_dimensions));
-        renderable->SetModelMatrix(model);
 
+        Renderable* renderable = GenerateChunkRenderable(chunk.get(), shader, grass, model);
         terrainRenderables.push_back(renderable);
+        
 
         int offsetX = chunk->chunkX * settings.chunk_dimensions;
         int offsetZ = chunk->chunkZ * settings.chunk_dimensions;
@@ -379,4 +285,105 @@ int main(int argc, char** argv)
     SDL_Quit();
 
     return 0;
+}
+
+
+void InitializeWindow(int windowW, int windowH)
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        std::cerr << "SDL2 video subsystem couldn't be initialized. Error: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    window = SDL_CreateWindow(
+        "Procedural Grass",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        windowW, windowH,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    SDL_SetWindowResizable(window, (SDL_bool)true);
+
+
+    gl_context = SDL_GL_CreateContext(window);
+
+
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    {
+        std::cerr << "Failed to initialize the OpenGL context." << std::endl;
+        exit(1);
+    }
+
+    std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplOpenGL3_Init("#version 150");
+}
+
+bool DetermineTerrainSettings(const ImGuiIO& io)
+{
+
+
+    bool terrain_settings_determined = false;
+    while (!terrain_settings_determined)
+    {
+        input->Update();
+        if (!running) return false;
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f));
+        ImGui::Begin("Terrain Settings");
+        {
+
+            ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
+            ImGui::InputInt("Number of Chunks", &settings.size, 2, 64);
+            ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 1024);
+
+            if (ImGui::Button("Generate Terrain"))
+            {
+                terrain_settings_determined = true;
+            }
+        }
+
+        // Rendering
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        SDL_GL_SwapWindow(window);
+    }
+
+    return true;
+}
+
+Renderable* GenerateChunkRenderable(TerrainMesh const * const chunk, Shader * const shader, Texture2D * const grass, glm::mat4 const & model)
+{
+    VertexArray* vertexArray = renderer->CreateVertexArray();
+
+    vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
+    vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
+    vertexArray->AddVertexBuffer(&chunk->texCoords[0].x, sizeof(glm::vec2) * chunk->texCoords.size(), 2);
+
+    IndexBuffer* iBuffer = renderer->CreateIndexBuffer(chunk->indices);
+
+    Renderable* renderable = renderer->CreateRenderable(shader, vertexArray, iBuffer);
+    renderable->AddTexture("grass", grass);
+
+
+    renderable->SetModelMatrix(model);
+
+    return renderable;
 }

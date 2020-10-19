@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <future>
 
+#include <iostream>
 #include <memory>
 
 #include "Vendor/fastnoise/FastNoise.h"
@@ -23,6 +24,9 @@ TerrainChunkGenerator::~TerrainChunkGenerator()
 
 std::vector<std::shared_ptr<TerrainMesh>> TerrainChunkGenerator::GenerateChunkSet(int size) const
 {
+	std::cout << "Beginning terrain generation..." << std::endl;
+	auto t1 = std::chrono::high_resolution_clock::now();
+
 	std::vector<std::shared_ptr<TerrainMesh>> result;
 
 	FastNoise noise;
@@ -54,6 +58,10 @@ std::vector<std::shared_ptr<TerrainMesh>> TerrainChunkGenerator::GenerateChunkSe
 		}
 	} 
 #endif
+
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds> (t2 - t1).count();
+	std::cout << "Finished terrian generation. Time: " << duration << "ms" << std::endl;
 
 	return result;
 }
