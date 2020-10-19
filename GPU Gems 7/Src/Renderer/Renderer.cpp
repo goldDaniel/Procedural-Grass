@@ -123,14 +123,20 @@ IndexBuffer* const Renderer::CreateIndexBuffer(const std::vector<unsigned int>& 
 	return result;
 }
 
-Shader* const Renderer::CreateShader(const char* vertexPath, const char* indexPath)
+Shader* const Renderer::CreateShader(const char* vertexPath, const char* fragPath)
 {
-	auto shader = std::make_unique<Shader>(vertexPath, indexPath);
-	auto result = shader.get();
+	std::string key = vertexPath;
+	key += fragPath;
 
-	shaders.push_back(std::move(shader));
+	auto shaderIter = shaders.find(key);
+	if (shaderIter != shaders.end())
+	{
+		return shaders[key].get();
+	}
 
-	return result;
+	shaders[key] = std::make_unique<Shader>(vertexPath, fragPath);
+
+	return shaders[key].get();
 }
 
 
@@ -144,7 +150,7 @@ Texture2D* const Renderer::CreateTexture2D(const std::string& filepath)
 	auto texturesIter = textures.find(filepath);
 	if (texturesIter != textures.end())
 	{
-		return textures[texturesIter->first].get();
+		return textures[filepath].get();
 	}
 	
 	textures[filepath] = std::make_unique<Texture2D>(filepath);

@@ -55,6 +55,7 @@
     <ClInclude Include="Src\Terrain\GrassMesh.h" />
     <ClInclude Include="Src\Terrain\TerrainMeshGenerator.h" />
     <ClInclude Include="Src\Terrain\TerrainMesh.h" />
+    <ClInclude Include="Src\Terrain\TerrainRenderable.h" />
     <ClInclude Include="Src\Vendor\fastnoise\FastNoise.h" />
     <ClInclude Include="Src\Vendor\imgui\imconfig.h" />
     <ClInclude Include="Src\Vendor\imgui\imgui.h" />

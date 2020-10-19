@@ -9,8 +9,6 @@ layout (location = 3) in mat4 aTransform;
 out vec3 Normal;
 out vec2 TexCoords;
 
-uniform vec3 camPos;
-
 uniform float windOffset0;
 uniform float windOffset1;
 
@@ -27,11 +25,8 @@ void main()
 
 
 	vec4 posFinal = vec4(aPos, 1.0);
-	 
-	float dstFromCam = distance(camPos, (aTransform * posFinal).xyz);
-	float animationDistanceThreshold = 512;
-
-	if(aTexCoord.y > 0.5 && dstFromCam < animationDistanceThreshold)
+	
+	if(aTexCoord.y > 0.5)
 	{
 		vec4 modified = aTransform * posFinal;
 

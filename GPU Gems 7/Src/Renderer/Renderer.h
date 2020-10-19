@@ -44,9 +44,10 @@ private:
 
 	
 
-	std::vector<std::unique_ptr<Shader>> shaders;
 	std::vector<std::unique_ptr<VertexArray>> vertexArrays;
 	std::vector<std::unique_ptr<IndexBuffer>> indexBuffers;
+
+	std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
 
 	std::unordered_map<std::string, std::unique_ptr<Texture2D>> textures;
 };

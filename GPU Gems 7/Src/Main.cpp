@@ -35,6 +35,7 @@
 
 #include "Terrain/GrassMesh.h"
 #include "Terrain/TerrainMeshGenerator.h"
+#include "Terrain/TerrainRenderable.h"
 
 struct TerrainSettings
 {
@@ -56,8 +57,6 @@ bool running = true;
 void InitializeWindow(int windowW, int windowH);
 bool DetermineTerrainSettings(const ImGuiIO& io);
 
-Renderable* GenerateChunkRenderable(TerrainMesh const* const chunk, Shader* const shader, Texture2D* const grass, glm::mat4 const& model);
-
 int main(int argc, char** argv)
 {
     InitializeWindow(1280, 720);
@@ -72,93 +71,21 @@ int main(int argc, char** argv)
     }
 
     Camera cam;
-    std::vector<Renderable*> terrainRenderables;
 
-    Shader* shader = renderer->CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
-    Texture2D* grass = renderer->CreateTexture2D("Assets/Textures/Ground/Grass.jpg");
-
-    
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
-    std::vector<std::shared_ptr<TerrainMesh>> chunks = gen.GenerateChunkSet(settings.size);
-    
-    std::vector<glm::mat4> transforms;
-    std::vector<glm::vec3> normals;
+    std::vector<std::unique_ptr<TerrainRenderable>> renderables;
 
-    for (auto chunk : chunks)
-    {        
-        glm::mat4 model(1.0);
-        model = glm::translate(model, glm::vec3(chunk->chunkX * settings.chunk_dimensions, 0, chunk->chunkZ * settings.chunk_dimensions));
-
-        Renderable* renderable = GenerateChunkRenderable(chunk.get(), shader, grass, model);
-        terrainRenderables.push_back(renderable);
-        
-
-        int offsetX = chunk->chunkX * settings.chunk_dimensions;
-        int offsetZ = chunk->chunkZ * settings.chunk_dimensions;
-        auto processPosition = [&transforms, &offsetX, &offsetZ](glm::vec3& position)
-        {
-            glm::mat4 trans = glm::translate(glm::mat4(1.f), glm::vec3( position.x + offsetX,
-                                                                        position.y,
-                                                                        position.z + offsetZ));
-
-            float percent = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-
-
-            float rotation = glm::pi<float>() * percent;
-            float scale = 1 + percent * 8;
-
-            trans = glm::rotate(trans, rotation, glm::vec3(0, 1, 0));
-            trans = glm::scale(trans, glm::vec3(scale, scale, scale));
-            trans = glm::translate(trans, glm::vec3(0, 1, 0));
-
-            transforms.push_back(trans);
-        };
-
-        std::for_each(chunk->positions.begin(), chunk->positions.end(), processPosition);
-        normals.insert(normals.end(), chunk->normals.begin(), chunk->normals.end());
-    }    
-    chunks.clear();
-    chunks.shrink_to_fit(); 
-
-    Shader* grassShader = new Shader("Assets/Shaders/GrassVertex.glsl", "Assets/Shaders/GrassFragment.glsl");
-    Renderable* instancedRenderable;
+    for (int i = -settings.size / 2; i < settings.size / 2; i++)
     {
-        GrassMesh mesh;
-
-        std::vector<glm::vec3> scales;
-        for (size_t i = 0; i < normals.size(); i++)
+        for (int j = -settings.size / 2; j < settings.size / 2; j++)
         {
-            float scaleX = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
-            float scaleY = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
-            float scaleZ = 2 + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 4.f;
-            scales.push_back(glm::vec3(scaleX, scaleY, scaleZ));
+            std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(i, j);
+
+            renderables.push_back(std::move(std::make_unique<TerrainRenderable>(*chunk, *renderer)));
+
         }
-
-        VertexArray* vArray = new VertexArray();
-        vArray->AddVertexBuffer(&mesh.positions[0], sizeof(float) * mesh.positions.size(), 3);
-        vArray->AddVertexBuffer(&mesh.texCoords[0], sizeof(float) * mesh.texCoords.size(), 2);
-
-        vArray->AddInstancedVertexBuffer(&normals[0].x, sizeof(glm::vec3) * normals.size(), 3, 1);
-        vArray->AddInstancedVertexBuffer(transforms);
-        vArray->SetNumInstances(static_cast<uint32_t>(transforms.size()));
-
-        IndexBuffer* iBuffer = new IndexBuffer(mesh.indices);
-
-        Texture2D* grass_bilboard = renderer->CreateTexture2D("Assets/Textures/Ground/Grass_Bilboard.png");
-
-        instancedRenderable = new Renderable(grassShader, vArray, iBuffer);
-        instancedRenderable->AddTexture("grass_bilboard", grass_bilboard);
-
-        instancedRenderable->SetModelMatrix(glm::mat4(1.f));
-        instancedRenderable->SetRenderBackface(true);
-        
-        scales.clear();
-        scales.shrink_to_fit();
     }
-    transforms.clear();
-    transforms.shrink_to_fit();
-    normals.clear();
-    normals.shrink_to_fit();
+
 
     uint32_t prevTime = SDL_GetTicks();
     glm::vec2 prevMousePos = input->GetMousePos();
@@ -194,14 +121,11 @@ int main(int argc, char** argv)
 
         input->Update();
 
-        static bool render_grass = true;
         static bool render_terrain = true;
         static bool render_skybox = true;
 
         ImGui::Begin("Debug");
         {
-
-            ImGui::Checkbox("Render Grass", &render_grass);
             ImGui::Checkbox("Render Terrain", &render_terrain);
             ImGui::Checkbox("Render Skybox", &render_skybox);
             ImGui::Spacing();
@@ -251,28 +175,16 @@ int main(int argc, char** argv)
         
         if (render_terrain)
         {
-            shader->Bind();
-            shader->SetFloat("time", elapsed);
-            for (Renderable* r : terrainRenderables)
+            float offset0 = glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f);
+            float offset1 = glm::cos(elapsed + 1.618f);
+            
+            for (auto& terrainRenderable : renderables)
             {
-                r->SetViewMatrix(cam.GetViewMatrix());
-                r->SetProjectionMatrix(proj);
-
-                renderer->Render(*r);
+                terrainRenderable->SetWindOffsets(offset0, offset1);
+                terrainRenderable->AddElapsedTime(dt);
+                terrainRenderable->Render(*renderer, cam.GetViewMatrix(), proj);
             }
         }
-
-        if (render_grass)
-        {
-            grassShader->Bind();
-            grassShader->SetVec3("camPos", cam.Position);
-            grassShader->SetFloat("windOffset0", glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f));
-            grassShader->SetFloat("windOffset1", glm::cos(elapsed + 1.618f));
-            instancedRenderable->SetViewMatrix(cam.GetViewMatrix());
-            instancedRenderable->SetProjectionMatrix(proj);
-            renderer->Render(*instancedRenderable);
-        }
-
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -369,21 +281,3 @@ bool DetermineTerrainSettings(const ImGuiIO& io)
     return true;
 }
 
-Renderable* GenerateChunkRenderable(TerrainMesh const * const chunk, Shader * const shader, Texture2D * const grass, glm::mat4 const & model)
-{
-    VertexArray* vertexArray = renderer->CreateVertexArray();
-
-    vertexArray->AddVertexBuffer(&chunk->positions[0].x, sizeof(glm::vec3) * chunk->positions.size(), 3);
-    vertexArray->AddVertexBuffer(&chunk->normals[0].x, sizeof(glm::vec3) * chunk->normals.size(), 3);
-    vertexArray->AddVertexBuffer(&chunk->texCoords[0].x, sizeof(glm::vec2) * chunk->texCoords.size(), 2);
-
-    IndexBuffer* iBuffer = renderer->CreateIndexBuffer(chunk->indices);
-
-    Renderable* renderable = renderer->CreateRenderable(shader, vertexArray, iBuffer);
-    renderable->AddTexture("grass", grass);
-
-
-    renderable->SetModelMatrix(model);
-
-    return renderable;
-}

@@ -133,5 +133,8 @@
     <ClInclude Include="Src\Vendor\imgui\metrics_gui\include\metrics_gui\metrics_gui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Terrain\TerrainRenderable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

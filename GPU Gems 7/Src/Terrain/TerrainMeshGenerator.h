@@ -13,7 +13,7 @@ public:
 	TerrainChunkGenerator(int chunkDimensions, int maxHeight = 128, float scale = 1);
 	~TerrainChunkGenerator();
 
-	std::vector<std::shared_ptr<TerrainMesh>> GenerateChunkSet(int size) const;
+	std::shared_ptr<TerrainMesh> GenerateChunk(int chunkX, int chunkZ) const;
 
 private:
 	const float scale;
