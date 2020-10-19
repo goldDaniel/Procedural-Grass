@@ -9,6 +9,8 @@
 #include "Texture.h"
 #include "Renderable.h"
 
+#include <unordered_map>
+
 
 class Renderer
 {
@@ -42,9 +44,11 @@ private:
 
 	
 
-	std::vector<Shader*> shaders;
-	std::vector<VertexArray*> vertexArrays;
-	std::vector<IndexBuffer*> indexBuffers;
+	std::vector<std::unique_ptr<Shader>> shaders;
+	std::vector<std::unique_ptr<VertexArray>> vertexArrays;
+	std::vector<std::unique_ptr<IndexBuffer>> indexBuffers;
+
+	std::unordered_map<std::string, std::unique_ptr<Texture2D>> textures;
 };
 
 #endif

@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     std::vector<Renderable*> terrainRenderables;
 
     Shader* shader = renderer->CreateShader("Assets/Shaders/VertexShader.glsl", "Assets/Shaders/FragmentShader.glsl");
-    Texture2D* grass = Texture2D::CreateTexture("Assets/Textures/Ground/Grass.jpg");
+    Texture2D* grass = renderer->CreateTexture2D("Assets/Textures/Ground/Grass.jpg");
 
     
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 
         IndexBuffer* iBuffer = new IndexBuffer(mesh.indices);
 
-        Texture2D* grass_bilboard = Texture2D::CreateTexture("Assets/Textures/Ground/Grass_Bilboard.png");
+        Texture2D* grass_bilboard = renderer->CreateTexture2D("Assets/Textures/Ground/Grass_Bilboard.png");
 
         instancedRenderable = new Renderable(grassShader, vArray, iBuffer);
         instancedRenderable->AddTexture("grass_bilboard", grass_bilboard);

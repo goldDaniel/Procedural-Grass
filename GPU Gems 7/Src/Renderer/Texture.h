@@ -17,7 +17,7 @@ class Texture2D
 
 public:
 
-	static Texture2D * CreateTexture(const std::string& filepath)
+	Texture2D(const std::string& filepath)
 	{
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
@@ -56,12 +56,14 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
-		return new Texture2D(textureID, width, height);
+		this->ID = textureID;
+		this->width = width;
+		this->height = height;
 	}
 
-	static void DestroyTexture(Texture2D* tex)
+	~Texture2D()
 	{
-		
+		glDeleteTextures(1, &ID);
 	}
 
 	uint32_t GetID() const
@@ -81,10 +83,8 @@ public:
 
 private:
 	
-	Texture2D(uint32_t ID, int w, int h) : ID(ID), width(w), height(h)
-	{
-
-	}
+	Texture2D(uint32_t ID, int w, int h) 
+		: ID(ID), width(w), height(h) {}
 
 	uint32_t ID;
 

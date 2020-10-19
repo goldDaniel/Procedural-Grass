@@ -14,20 +14,9 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-	for (IndexBuffer* i : indexBuffers)
-	{
-		delete i;
-	}
-
-	for (VertexArray* v : vertexArrays)
-	{
-		delete v;
-	}
-
-	for (Shader* s : shaders)
-	{
-		delete s;
-	}
+	indexBuffers.clear();
+	vertexArrays.clear();
+	shaders.clear();
 }
 
 void Renderer::SetClearColor(const glm::vec4& color)
@@ -69,16 +58,16 @@ void Renderer::Render(const Renderable& renderable) const
 	}
 	else
 	{
-		glDisable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 	}
-
+	
+	//setup all our needed matrices
 	renderable.shader->Bind();
-
 	renderable.shader->SetMat4("model", renderable.model);
 	renderable.shader->SetMat4("view", renderable.view);
 	renderable.shader->SetMat4("projection", renderable.proj);
 
-
+	//binds all textures in order they are added to the renderable
 	for (uint32_t i = 0; i < renderable.textures.size(); i++)
 	{
 		renderable.shader->SetInt(renderable.textureNames[i], i);
@@ -116,26 +105,32 @@ void Renderer::RenderWireframes(bool wireframes)
 
 VertexArray* const Renderer::CreateVertexArray()
 {
-	auto resource = new VertexArray();
-	vertexArrays.push_back(resource);
+	auto resource = std::make_unique<VertexArray>();
+	auto result = resource.get();
 
-	return resource;
+	vertexArrays.push_back(std::move(resource));
+
+	return result;
 }
 
 IndexBuffer* const Renderer::CreateIndexBuffer(const std::vector<unsigned int>& indices)
 {
-	auto resource = new IndexBuffer(indices);
-	indexBuffers.push_back(resource);
+	auto resource = std::make_unique<IndexBuffer>(indices);
+	auto result = resource.get();
 
-	return resource;
+	indexBuffers.push_back(std::move(resource));
+
+	return result;
 }
 
 Shader* const Renderer::CreateShader(const char* vertexPath, const char* indexPath)
 {
-	auto shader = new Shader(vertexPath, indexPath);
-	shaders.push_back(shader);
+	auto shader = std::make_unique<Shader>(vertexPath, indexPath);
+	auto result = shader.get();
 
-	return shader;
+	shaders.push_back(std::move(shader));
+
+	return result;
 }
 
 
@@ -146,9 +141,15 @@ Renderable* const Renderer::CreateRenderable(Shader* shader, VertexArray* v, Ind
 
 Texture2D* const Renderer::CreateTexture2D(const std::string& filepath)
 {
-	Texture2D* tex = Texture2D::CreateTexture(filepath);
+	auto texturesIter = textures.find(filepath);
+	if (texturesIter != textures.end())
+	{
+		return textures[texturesIter->first].get();
+	}
+	
+	textures[filepath] = std::make_unique<Texture2D>(filepath);
 
-	return tex;
+	return textures[filepath].get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
