@@ -37,7 +37,8 @@ static std::shared_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int
 
 	result->chunkX = static_cast<int>(chunkX * scale);
 	result->chunkZ = static_cast<int>(chunkZ * scale);
-	result->chunk_dimensions = chunkDimensions;
+	result->chunk_dimensions = chunkDimensions + 1;
+	result->chunk_height = maxHeight;
 	result->positions.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 	result->normals.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 	result->texCoords.reserve(2 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));

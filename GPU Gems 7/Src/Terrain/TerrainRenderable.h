@@ -12,6 +12,15 @@ public:
         offset0 = offset1 = 0;
         elapsed_time = 0;
         
+        aabb_min.x = mesh.chunkX * mesh.chunk_dimensions - mesh.chunk_dimensions / 2;
+        aabb_max.x = mesh.chunkX * mesh.chunk_dimensions + mesh.chunk_dimensions / 2;
+
+        aabb_min.y = -mesh.chunk_height;
+        aabb_max.y =  mesh.chunk_height;
+
+        aabb_min.z = mesh.chunkZ * mesh.chunk_dimensions - mesh.chunk_dimensions / 2;
+        aabb_max.z = mesh.chunkZ * mesh.chunk_dimensions + mesh.chunk_dimensions / 2;
+
         std::vector<glm::mat4> grass_transforms;
         std::vector<glm::vec3> grass_normals;
         GenerateGroundRenderable(renderer, mesh, grass_transforms, grass_normals, glm::mat4(1.f));
@@ -47,6 +56,16 @@ public:
         this->elapsed_time += dt;
     } 
 
+    glm::vec3 GetMin()
+    {
+        return aabb_min;
+    }
+
+    glm::vec3 GetMax()
+    {
+        return aabb_max;
+    }
+
 private:
 
     float offset0;
@@ -54,11 +73,16 @@ private:
 
     float elapsed_time;
 
+    glm::vec3 aabb_min;
+    glm::vec3 aabb_max;
+
     Shader* heightmap_shader;
     Shader* grass_shader;
 
 	Renderable* heightmap_renderable;
 	Renderable* grass_blades_renderable;
+
+    
 
     void GenerateGroundRenderable(Renderer& renderer, 
                                   TerrainMesh const&chunk, 

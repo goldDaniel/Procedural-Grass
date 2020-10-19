@@ -46,6 +46,7 @@
   <ItemGroup>
     <ClInclude Include="Src\Camera.h" />
     <ClInclude Include="Src\Input.h" />
+    <ClInclude Include="Src\Renderer\Frustum.h" />
     <ClInclude Include="Src\Renderer\IndexBuffer.h" />
     <ClInclude Include="Src\Renderer\Renderable.h" />
     <ClInclude Include="Src\Renderer\Renderer.h" />

@@ -11,6 +11,8 @@ struct TerrainMesh
 	int chunkZ;
 
 	int chunk_dimensions;
+	
+	int chunk_height;
 
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;

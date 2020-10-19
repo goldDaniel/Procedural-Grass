@@ -31,7 +31,7 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/Shader.h"
-
+#include "Renderer/Frustum.h"
 
 #include "Terrain/GrassMesh.h"
 #include "Terrain/TerrainMeshGenerator.h"
@@ -70,7 +70,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    Camera cam;
 
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
     std::vector<std::unique_ptr<TerrainRenderable>> renderables;
@@ -86,6 +85,8 @@ int main(int argc, char** argv)
         }
     }
 
+
+    Camera cam;
 
     uint32_t prevTime = SDL_GetTicks();
     glm::vec2 prevMousePos = input->GetMousePos();
@@ -139,6 +140,8 @@ int main(int argc, char** argv)
         ImGui::End();
 
 
+        
+
         glm::vec2 mousePos = input->GetMousePos();
         glm::vec2 mouseDelta = mousePos - prevMousePos;
         prevMousePos = mousePos;
@@ -166,7 +169,9 @@ int main(int argc, char** argv)
         glViewport(0, 0, w, h);
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
-        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 1.0f, 10000.f);
+        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 0.1f, 5000.f);
+
+        Frustum frustum(proj * cam.GetViewMatrix());
 
         if (render_skybox)
         {
@@ -180,9 +185,18 @@ int main(int argc, char** argv)
             
             for (auto& terrainRenderable : renderables)
             {
+                glm::vec3 aabb_min;
+                glm::vec3 aabb_max;
+                aabb_min = terrainRenderable->GetMin();
+                aabb_max = terrainRenderable->GetMax();
+
                 terrainRenderable->SetWindOffsets(offset0, offset1);
                 terrainRenderable->AddElapsedTime(dt);
-                terrainRenderable->Render(*renderer, cam.GetViewMatrix(), proj);
+
+                if (frustum.IsBoxVisible(aabb_min, aabb_max))
+                {
+                    terrainRenderable->Render(*renderer, cam.GetViewMatrix(), proj);
+                }
             }
         }
 
