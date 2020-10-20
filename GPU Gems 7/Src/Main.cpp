@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
 
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
-    std::vector<std::unique_ptr<TerrainRenderable>> renderables;
+    std::vector<std::shared_ptr<TerrainRenderable>> renderables;
 
     for (int i = -settings.size / 2; i < settings.size / 2; i++)
     {
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         {
             std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(i, j);
 
-            renderables.push_back(std::move(std::make_unique<TerrainRenderable>(*chunk, *renderer)));
+            renderables.push_back(std::make_shared<TerrainRenderable>(*chunk, *renderer));
 
         }
     }

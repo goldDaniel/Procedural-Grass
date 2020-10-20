@@ -25,6 +25,7 @@
     <ClCompile Include="Src\Renderer\Renderer.cpp" />
     <ClCompile Include="Src\Renderer\VertexArray.cpp" />
     <ClCompile Include="Src\Terrain\TerrainMeshGenerator.cpp" />
+    <ClCompile Include="Src\Terrain\TerrainRenderable.cpp" />
     <ClCompile Include="Src\Vendor\fastnoise\FastNoise.cpp" />
     <ClCompile Include="Src\Vendor\imgui\imgui.cpp" />
     <ClCompile Include="Src\Vendor\imgui\imgui_demo.cpp" />
