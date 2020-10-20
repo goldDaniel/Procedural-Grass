@@ -37,11 +37,23 @@
 #include "Terrain/TerrainMeshGenerator.h"
 #include "Terrain/TerrainRenderable.h"
 
+struct pair_hash {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1, T2>& p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+
+        // Mainly for demonstration purposes, i.e. works but is overly simple
+        // In the real world, use sth. like boost.hash_combine
+        return h1 ^ h2;
+    }
+};
+
 struct TerrainSettings
 {
     int chunk_dimensions = 32;
-    int size = 32;
     int max_terrain_height = 512;
+    int scale = 4.f;
 };
 TerrainSettings settings;
 
@@ -71,19 +83,9 @@ int main(int argc, char** argv)
     }
 
 
-    TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, 4.f);
-    std::vector<std::shared_ptr<TerrainRenderable>> renderables;
+    TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, settings.scale);
+    std::unordered_map<Coords, std::shared_ptr<TerrainRenderable>, pair_hash> renderables;
 
-    for (int i = -settings.size / 2; i < settings.size / 2; i++)
-    {
-        for (int j = -settings.size / 2; j < settings.size / 2; j++)
-        {
-            std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(i, j);
-
-            renderables.push_back(std::make_shared<TerrainRenderable>(*chunk, *renderer));
-
-        }
-    }
 
 
     Camera cam;
@@ -105,7 +107,7 @@ int main(int argc, char** argv)
     frameTimePlot.mShowLegendColor = false;
     frameTimePlot.AddMetric(&frameTimeMetric);
     
-    while(running) 
+    while (running)
     {
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -140,7 +142,7 @@ int main(int argc, char** argv)
         ImGui::End();
 
 
-        
+
 
         glm::vec2 mousePos = input->GetMousePos();
         glm::vec2 mouseDelta = mousePos - prevMousePos;
@@ -154,13 +156,46 @@ int main(int argc, char** argv)
         float speed = 64;
         if (input->IsKeyDown(SDLK_a)) cam.ProcessKeyboard(Camera_Movement::LEFT, dt);
         if (input->IsKeyDown(SDLK_d)) cam.ProcessKeyboard(Camera_Movement::RIGHT, dt);
-        
+
         if (input->IsKeyDown(SDLK_w)) cam.ProcessKeyboard(Camera_Movement::FORWARD, dt);
         if (input->IsKeyDown(SDLK_s)) cam.ProcessKeyboard(Camera_Movement::BACKWARD, dt);
-        
+
         if (input->IsKeyDown(SDLK_LSHIFT)) cam.ProcessKeyboard(Camera_Movement::DOWN, dt);
         if (input->IsKeyDown(SDLK_SPACE)) cam.ProcessKeyboard(Camera_Movement::UP, dt);
-        
+
+
+        int chunkX = cam.Position.x / settings.chunk_dimensions / settings.scale;
+        int chunkZ = cam.Position.z / settings.chunk_dimensions / settings.scale;
+        int loadRange = 16;
+        int unloadRange = 32;
+
+        for (int x = -loadRange; x < loadRange; x++)
+        {
+            for (int z = -loadRange; z < loadRange; z++)
+            {
+                if (!gen.HasGenerated(chunkX + x, chunkZ + z))
+                {
+                    std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
+                    renderables[Coords(chunkX + x, chunkZ + z)] = (std::make_shared<TerrainRenderable>(*chunk, *renderer));
+                }
+            }
+        }
+
+
+        for (auto& pair : renderables)
+        {
+            auto coords = pair.first;
+            glm::vec2 playerChunk(chunkX, chunkZ);
+            glm::vec2 renderableChunk(coords.first, coords.second);
+
+            if (glm::distance(playerChunk, renderableChunk) > unloadRange)
+            {
+                Coords c(coords.first, coords.second);
+                renderables.erase(c);
+                gen.Unload(coords.first, coords.second);
+            }
+        }
+
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -183,8 +218,10 @@ int main(int argc, char** argv)
             float offset0 = glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f);
             float offset1 = glm::cos(elapsed + 1.618f);
             
-            for (auto& terrainRenderable : renderables)
+            for (auto& pair : renderables)
             {
+                auto terrainRenderable = pair.second;
+
                 glm::vec3 aabb_min;
                 glm::vec3 aabb_max;
                 aabb_min = terrainRenderable->GetMin();
@@ -223,11 +260,12 @@ void InitializeWindow(int windowW, int windowH)
     }
 
     window = SDL_CreateWindow(
-        "Procedural Grass",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        windowW, windowH,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+                            "Procedural Grass",
+                            SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED,
+                            windowW, windowH,
+                            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+
     SDL_SetWindowResizable(window, (SDL_bool)true);
 
 
@@ -276,7 +314,6 @@ bool DetermineTerrainSettings(const ImGuiIO& io)
         {
 
             ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
-            ImGui::InputInt("Number of Chunks", &settings.size, 2, 64);
             ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 1024);
 
             if (ImGui::Button("Generate Terrain"))

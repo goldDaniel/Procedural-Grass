@@ -22,14 +22,18 @@ TerrainChunkGenerator::~TerrainChunkGenerator()
 
 }
 
-std::shared_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, int chunkZ) const
+std::shared_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, int chunkZ)
 {
 	FastNoise noise;
 	noise.SetFrequency(0.003);
 	noise.SetFractalOctaves(8);
 
+	hasGenerated.push_back(Coords(chunkX, chunkZ));
+
 	return GenerateChunkMesh(noise, chunkX, chunkZ, chunkDimensions, maxHeight, scale);
 }
+
+
 
 static std::shared_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
 {
