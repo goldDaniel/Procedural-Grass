@@ -30,7 +30,7 @@ std::shared_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, in
 
 	hasGenerated.push_back(Coords(chunkX, chunkZ));
 
-	return GenerateChunkMesh(noise, chunkX, chunkZ, chunkDimensions, maxHeight, scale);
+	return std::move(GenerateChunkMesh(noise, chunkX, chunkZ, chunkDimensions, maxHeight, scale));
 }
 
 
@@ -105,5 +105,5 @@ static std::shared_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int
 		}
 	}
 
-	return result;
+	return std::move(result);
 }

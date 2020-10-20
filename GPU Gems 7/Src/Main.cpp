@@ -167,7 +167,6 @@ int main(int argc, char** argv)
         int chunkX = cam.Position.x / settings.chunk_dimensions / settings.scale;
         int chunkZ = cam.Position.z / settings.chunk_dimensions / settings.scale;
         int loadRange = 16;
-        int unloadRange = 32;
 
         for (int x = -loadRange; x < loadRange; x++)
         {
@@ -178,21 +177,6 @@ int main(int argc, char** argv)
                     std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
                     renderables[Coords(chunkX + x, chunkZ + z)] = (std::make_shared<TerrainRenderable>(*chunk, *renderer));
                 }
-            }
-        }
-
-
-        for (auto& pair : renderables)
-        {
-            auto coords = pair.first;
-            glm::vec2 playerChunk(chunkX, chunkZ);
-            glm::vec2 renderableChunk(coords.first, coords.second);
-
-            if (glm::distance(playerChunk, renderableChunk) > unloadRange)
-            {
-                Coords c(coords.first, coords.second);
-                renderables.erase(c);
-                gen.Unload(coords.first, coords.second);
             }
         }
 

@@ -142,7 +142,12 @@ Shader* const Renderer::CreateShader(const char* vertexPath, const char* fragPat
 
 Renderable* const Renderer::CreateRenderable(Shader* shader, VertexArray* v, IndexBuffer* i)
 {
-	return new Renderable(shader, v, i);
+	auto resource = std::make_unique<Renderable>(shader, v, i);
+	auto result = resource.get();
+
+	renderables.push_back(std::move(resource));
+
+	return result;
 }
 
 Texture2D* const Renderer::CreateTexture2D(const std::string& filepath)

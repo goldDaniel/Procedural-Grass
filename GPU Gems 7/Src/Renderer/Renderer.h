@@ -24,6 +24,7 @@ public:
 	void RenderSkybox(glm::mat4 view, glm::mat4 proj);
 	void Render(const Renderable& renderable) const;
 
+	void Destroy(Renderable* renderable);
 
 	void RenderWireframes(bool wireframes);
 
@@ -44,6 +45,7 @@ private:
 
 	
 
+	std::vector<std::unique_ptr<Renderable>> renderables;
 	std::vector<std::unique_ptr<VertexArray>> vertexArrays;
 	std::vector<std::unique_ptr<IndexBuffer>> indexBuffers;
 
