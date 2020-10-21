@@ -34,7 +34,7 @@ public:
 
 	~Renderable();
 
-	void Bind();
+	void Bind() const;
 
 	void AddTexture(std::string const& uniformName, Texture2D * const texture);
 

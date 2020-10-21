@@ -32,7 +32,7 @@ void Renderable::SetProjectionMatrix(const glm::mat4& proj)
 	this->proj = proj;
 }
 
-void Renderable::Bind()
+void Renderable::Bind() const
 {
 	vArray->Bind();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBuffer->GetID());
