@@ -8,7 +8,7 @@
 
 #include "Vendor/fastnoise/FastNoise.h"
 
-static std::shared_ptr<TerrainMesh> GenerateChunkMesh(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale);
+static std::unique_ptr<TerrainMesh> GenerateChunkMesh(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale);
 
 
 
@@ -22,7 +22,7 @@ TerrainChunkGenerator::~TerrainChunkGenerator()
 
 }
 
-std::shared_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, int chunkZ)
+std::unique_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, int chunkZ)
 {
 	FastNoise noise;
 	noise.SetFrequency(0.003);
@@ -35,17 +35,17 @@ std::shared_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, in
 
 
 
-static std::shared_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
+static std::unique_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
 {
-	std::shared_ptr<TerrainMesh> result = std::make_shared<TerrainMesh>();
+	std::unique_ptr<TerrainMesh> result = std::make_unique<TerrainMesh>();
 
 	result->chunkX = static_cast<int>(chunkX * scale);
 	result->chunkZ = static_cast<int>(chunkZ * scale);
 	result->chunk_dimensions = chunkDimensions + 1;
 	result->chunk_height = maxHeight;
-	result->positions.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
-	result->normals.reserve(3 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
-	result->texCoords.reserve(2 * static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
+	result->positions.reserve(static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
+	result->normals.reserve(static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
+	result->texCoords.reserve(static_cast<size_t>(chunkDimensions) * static_cast<size_t>(chunkDimensions));
 
 	int padding = 1;
 
@@ -53,8 +53,8 @@ static std::shared_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int
 
 	float startX = -finalChunkSize;
 	float startZ = -finalChunkSize;
-	float endX   = finalChunkSize;
-	float endZ =   finalChunkSize;
+	float endX   =  finalChunkSize;
+	float endZ   =  finalChunkSize;
 
 
 	for (float x = startX; x < endX; x++)

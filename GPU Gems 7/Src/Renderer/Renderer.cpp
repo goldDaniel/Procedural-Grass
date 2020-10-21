@@ -142,6 +142,16 @@ Shader* const Renderer::CreateShader(const char* vertexPath, const char* fragPat
 
 Renderable* const Renderer::CreateRenderable(Shader* shader, VertexArray* v, IndexBuffer* i)
 {
+	for (auto& renderable : renderables)
+	{
+		if (renderable->shader == shader &&
+			renderable->vArray == v &&
+			renderable->iBuffer == i)
+		{
+			return renderable.get();
+		}
+	}
+
 	auto resource = std::make_unique<Renderable>(shader, v, i);
 	auto result = resource.get();
 

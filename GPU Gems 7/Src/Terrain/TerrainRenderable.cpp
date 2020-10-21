@@ -22,9 +22,6 @@ TerrainRenderable::TerrainRenderable(const TerrainMesh& mesh, Renderer& renderer
     std::vector<glm::mat4> grass_transforms;
     GenerateGroundRenderable(renderer, mesh, grass_transforms);
     GenerateGrassRenderable(renderer, grass_transforms, mesh.normals);
-
-    grass_transforms.clear();
-    grass_transforms.shrink_to_fit();
 }
 
 void TerrainRenderable::Render(const Renderer& renderer, glm::mat4 const& view, glm::mat4 const& proj)

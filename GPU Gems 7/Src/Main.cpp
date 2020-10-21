@@ -37,14 +37,14 @@
 #include "Terrain/TerrainMeshGenerator.h"
 #include "Terrain/TerrainRenderable.h"
 
-struct pair_hash {
+struct pair_hash 
+{
     template <class T1, class T2>
-    std::size_t operator () (const std::pair<T1, T2>& p) const {
+    std::size_t operator () (const std::pair<T1, T2>& p) const 
+    {
         auto h1 = std::hash<T1>{}(p.first);
         auto h2 = std::hash<T2>{}(p.second);
 
-        // Mainly for demonstration purposes, i.e. works but is overly simple
-        // In the real world, use sth. like boost.hash_combine
         return h1 ^ h2;
     }
 };
@@ -53,6 +53,7 @@ struct TerrainSettings
 {
     int chunk_dimensions = 32;
     int max_terrain_height = 512;
+    int generation_range = 16.f;
     int scale = 4.f;
 };
 TerrainSettings settings;
@@ -84,12 +85,10 @@ int main(int argc, char** argv)
 
 
     TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, settings.scale);
-    std::unordered_map<Coords, std::shared_ptr<TerrainRenderable>, pair_hash> renderables;
-
+    std::unordered_map<Coords, std::unique_ptr<TerrainRenderable>, pair_hash> renderables;
 
 
     Camera cam;
-
     uint32_t prevTime = SDL_GetTicks();
     glm::vec2 prevMousePos = input->GetMousePos();
 
@@ -142,8 +141,6 @@ int main(int argc, char** argv)
         ImGui::End();
 
 
-
-
         glm::vec2 mousePos = input->GetMousePos();
         glm::vec2 mouseDelta = mousePos - prevMousePos;
         prevMousePos = mousePos;
@@ -166,7 +163,7 @@ int main(int argc, char** argv)
 
         int chunkX = cam.Position.x / settings.chunk_dimensions / settings.scale;
         int chunkZ = cam.Position.z / settings.chunk_dimensions / settings.scale;
-        int loadRange = 16;
+        int loadRange = settings.generation_range;
 
         for (int x = -loadRange; x < loadRange; x++)
         {
@@ -174,12 +171,11 @@ int main(int argc, char** argv)
             {
                 if (!gen.HasGenerated(chunkX + x, chunkZ + z))
                 {
-                    std::shared_ptr<TerrainMesh> chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
-                    renderables[Coords(chunkX + x, chunkZ + z)] = (std::make_shared<TerrainRenderable>(*chunk, *renderer));
+                    std::unique_ptr<TerrainMesh> chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
+                    renderables[Coords(chunkX + x, chunkZ + z)] = (std::make_unique<TerrainRenderable>(*chunk, *renderer));
                 }
             }
         }
-
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -204,7 +200,7 @@ int main(int argc, char** argv)
             
             for (auto& pair : renderables)
             {
-                auto terrainRenderable = pair.second;
+                auto terrainRenderable = pair.second.get();
 
                 glm::vec3 aabb_min;
                 glm::vec3 aabb_max;
@@ -298,13 +294,15 @@ bool DetermineTerrainSettings(const ImGuiIO& io)
         {
 
             ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
-            ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 1024);
+            ImGui::InputInt("Generation Distance", &settings.generation_range, 2, 4);
+            ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 64);
 
             if (ImGui::Button("Generate Terrain"))
             {
                 terrain_settings_determined = true;
             }
         }
+        ImGui::End();
 
         // Rendering
         ImGui::Render();

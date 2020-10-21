@@ -24,7 +24,6 @@ public:
 	void RenderSkybox(glm::mat4 view, glm::mat4 proj);
 	void Render(const Renderable& renderable) const;
 
-	void Destroy(Renderable* renderable);
 
 	void RenderWireframes(bool wireframes);
 

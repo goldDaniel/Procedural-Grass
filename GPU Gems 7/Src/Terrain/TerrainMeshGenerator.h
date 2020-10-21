@@ -17,7 +17,7 @@ public:
 	TerrainChunkGenerator(int chunkDimensions, int maxHeight = 128, float scale = 1);
 	~TerrainChunkGenerator();
 
-	std::shared_ptr<TerrainMesh> GenerateChunk(int chunkX, int chunkZ);
+	std::unique_ptr<TerrainMesh> GenerateChunk(int chunkX, int chunkZ);
 
 	bool HasGenerated(int chunkX, int chunkZ) const 
 	{
@@ -26,8 +26,6 @@ public:
 
 	void Unload(int chunkX, int chunkZ)
 	{
-		assert(std::find(hasGenerated.begin(), hasGenerated.end(), Coords(chunkX, chunkZ) != hasGenerated.end()));
-
 		auto pos = std::find(hasGenerated.begin(), hasGenerated.end(), Coords(chunkX, chunkZ));
 		hasGenerated.erase(pos);
 	}

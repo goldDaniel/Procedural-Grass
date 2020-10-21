@@ -28,15 +28,15 @@ private:
 	bool render_backface;
 
 public:
-	Renderable(const Shader* const shader,
-		const VertexArray* const v,
-		const IndexBuffer* const i);
+	Renderable(Shader const * const shader,
+		       VertexArray const * const v,
+			   IndexBuffer const * const i);
 
 	~Renderable();
 
 	void Bind();
 
-	void AddTexture(const std::string& uniformName, Texture2D* const texture);
+	void AddTexture(std::string const & uniformName, Texture2D const * const texture);
 
 	void SetModelMatrix(const glm::mat4& model);
 	void SetViewMatrix(const glm::mat4& view);
