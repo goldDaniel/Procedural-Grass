@@ -36,7 +36,7 @@ public:
 
 	void Bind();
 
-	void AddTexture(std::string const & uniformName, Texture2D const * const texture);
+	void AddTexture(std::string const& uniformName, Texture2D * const texture);
 
 	void SetModelMatrix(const glm::mat4& model);
 	void SetViewMatrix(const glm::mat4& view);

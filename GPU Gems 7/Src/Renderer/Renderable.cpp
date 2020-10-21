@@ -11,7 +11,7 @@ Renderable::Renderable(const Shader* const shader,
 
 Renderable::~Renderable() {}
 
-void Renderable::AddTexture(const std::string& uniformName, Texture2D* const texture)
+void Renderable::AddTexture(std::string const& uniformName, Texture2D* const texture)
 {
 	textureNames.push_back(uniformName);
 	textures.push_back(texture);
