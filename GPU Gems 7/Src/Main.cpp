@@ -54,7 +54,7 @@ struct TerrainSettings
     int chunk_dimensions = 32;
     int max_terrain_height = 512;
     int generation_range = 16;
-    int scale = 4.f;
+    int scale = 2.f;
 };
 TerrainSettings settings;
 
@@ -204,8 +204,9 @@ int main(int argc, char** argv)
 
         if (render_terrain)
         {
-            float offset0 = glm::sin(elapsed) * glm::sin(elapsed*0.15f);
-            float offset1 = glm::cos(elapsed * 0.1234f) + glm::cos(elapsed/3.0f);
+            float angleOffset = glm::pi<float>() / 2;
+            float offset0 = glm::sin(elapsed + angleOffset) * glm::sin(elapsed*0.15f + angleOffset);
+            float offset1 = glm::cos(elapsed) + glm::cos(elapsed*0.15f);
             
             for (auto& pair : renderables)
             {
