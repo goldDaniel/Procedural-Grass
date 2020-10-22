@@ -10,14 +10,14 @@ TerrainRenderable::TerrainRenderable(const TerrainMesh& mesh, Renderer& renderer
     offset0 = offset1 = 0;
     elapsed_time = 0;
 
-    aabb_min.x = mesh.chunkX * mesh.chunk_dimensions - mesh.chunk_dimensions / 2;
-    aabb_max.x = mesh.chunkX * mesh.chunk_dimensions + mesh.chunk_dimensions / 2;
+    aabb_min.x = static_cast<float>(mesh.chunkX * mesh.chunk_dimensions - mesh.chunk_dimensions / 2);
+    aabb_max.x = static_cast<float>(mesh.chunkX * mesh.chunk_dimensions + mesh.chunk_dimensions / 2);
 
-    aabb_min.y = -mesh.chunk_height;
-    aabb_max.y = mesh.chunk_height;
+    aabb_min.y = static_cast<float>(-mesh.chunk_height);
+    aabb_max.y = static_cast<float>(mesh.chunk_height);
 
-    aabb_min.z = mesh.chunkZ * mesh.chunk_dimensions - mesh.chunk_dimensions / 2;
-    aabb_max.z = mesh.chunkZ * mesh.chunk_dimensions + mesh.chunk_dimensions / 2;
+    aabb_min.z = static_cast<float>(mesh.chunkZ * mesh.chunk_dimensions - mesh.chunk_dimensions / 2);
+    aabb_max.z = static_cast<float>(mesh.chunkZ * mesh.chunk_dimensions + mesh.chunk_dimensions / 2);
 
     std::vector<glm::mat4> grass_transforms;
     GenerateGroundRenderable(renderer, mesh, grass_transforms);
@@ -35,6 +35,7 @@ void TerrainRenderable::Render(const Renderer& renderer, glm::mat4 const& view, 
     grass_shader->Bind();
     grass_shader->SetFloat("windOffset0", offset0);
     grass_shader->SetFloat("windOffset1", offset1);
+    grass_shader->SetFloat("terrain_scale", this->terrain_scale);
 
     grass_blades_renderable->SetViewMatrix(view);
     grass_blades_renderable->SetProjectionMatrix(proj);
@@ -46,6 +47,11 @@ void TerrainRenderable::SetWindOffsets(float offset0, float offset1)
 {
     this->offset0 = offset0;
     this->offset1 = offset1;
+}
+
+void TerrainRenderable::SetTerrainScale(float scale)
+{
+    this->terrain_scale = scale;
 }
 
 void TerrainRenderable::AddElapsedTime(float dt)
@@ -97,6 +103,7 @@ void TerrainRenderable::GenerateGroundRenderable(Renderer& renderer,
         trans = glm::rotate(trans, rotation, glm::vec3(0, 1, 0));
         trans = glm::scale(trans, glm::vec3(scale, scale, scale));
         trans = glm::translate(trans, glm::vec3(0, 1, 0));
+
 
         transforms.push_back(trans);
     }

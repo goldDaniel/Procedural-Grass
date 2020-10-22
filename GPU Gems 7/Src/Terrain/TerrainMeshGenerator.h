@@ -14,7 +14,7 @@ class TerrainChunkGenerator
 {
 public: 
 
-	TerrainChunkGenerator(int chunkDimensions, int maxHeight = 128, float scale = 1);
+	TerrainChunkGenerator(int chunkDimensions, int maxHeight = 128, int scale = 1);
 	~TerrainChunkGenerator();
 
 	std::unique_ptr<TerrainMesh> GenerateChunk(int chunkX, int chunkZ);
@@ -31,7 +31,7 @@ public:
 	}
 
 private:
-	const float scale;
+	const int scale;
 	const int chunkDimensions;
 	const int maxHeight;
 

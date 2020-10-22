@@ -130,6 +130,10 @@ int main(int argc, char** argv)
         {
             ImGui::Checkbox("Render Terrain", &render_terrain);
             ImGui::Checkbox("Render Skybox", &render_skybox);
+            ImGui::Checkbox("Render wireframes", &render_wireframe);
+
+            ImGui::DragFloat("Terrain Scale", &terrain_scale, 1, 0.25, 32);
+
             ImGui::Spacing();
 
             if (ImGui::CollapsingHeader("FrameTime Info", ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen))
@@ -161,8 +165,8 @@ int main(int argc, char** argv)
         if (input->IsKeyDown(SDLK_SPACE)) cam.ProcessKeyboard(Camera_Movement::UP, dt);
 
 
-        int chunkX = cam.Position.x / settings.chunk_dimensions / settings.scale;
-        int chunkZ = cam.Position.z / settings.chunk_dimensions / settings.scale;
+        int chunkX = static_cast<int>(cam.Position.x / settings.chunk_dimensions / settings.scale);
+        int chunkZ = static_cast<int>(cam.Position.z / settings.chunk_dimensions / settings.scale);
         int loadRange = settings.generation_range;
 
         for (int x = -loadRange; x < loadRange; x++)
@@ -188,15 +192,18 @@ int main(int argc, char** argv)
 
         Frustum frustum(proj * cam.GetViewMatrix());
 
+        
         if (render_skybox)
         {
             renderer->RenderSkybox(skyboxView, proj);
         }
-        
+
+        renderer->RenderWireframes(render_wireframe);
+
         if (render_terrain)
         {
-            float offset0 = glm::sin(elapsed + 3.1415f) * glm::sin(elapsed + 1.618f);
-            float offset1 = glm::cos(elapsed + 1.618f);
+            float offset0 = glm::sin(elapsed) * glm::sin(elapsed*0.15f);
+            float offset1 = glm::cos(elapsed * 0.1234f) + glm::cos(elapsed/3.0f);
             
             for (auto& pair : renderables)
             {

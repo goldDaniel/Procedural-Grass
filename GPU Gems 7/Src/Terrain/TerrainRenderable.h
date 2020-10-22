@@ -14,6 +14,7 @@ public:
 
     void SetWindOffsets(float offset0, float offset1);
     void AddElapsedTime(float dt);
+    void SetTerrainScale(float scale);
 
     glm::vec3 GetMin();
     glm::vec3 GetMax();
@@ -22,6 +23,8 @@ private:
 
     float offset0;
     float offset1;
+
+    float terrain_scale = 1;
 
     float elapsed_time;
 

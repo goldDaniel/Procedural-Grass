@@ -61,6 +61,8 @@ void Renderer::Render(const Renderable& renderable) const
 		glEnable(GL_CULL_FACE);
 	}
 	
+	renderable.shader->SetBool("render_wireframes", render_wireframes);
+
 	//setup all our needed matrices
 	renderable.shader->Bind();
 	renderable.shader->SetMat4("model", renderable.model);
@@ -92,6 +94,7 @@ void Renderer::Render(const Renderable& renderable) const
 
 void Renderer::RenderWireframes(bool wireframes)
 {
+	render_wireframes = wireframes;
 	if (wireframes)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

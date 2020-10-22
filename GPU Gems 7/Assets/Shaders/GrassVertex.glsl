@@ -28,8 +28,9 @@ void main()
 	{
 		vec4 modified = aTransform * posFinal;
 
-		posFinal.x += sin(windOffset0 + modified.x / 32.0) / 2.0;
-		posFinal.z += cos(windOffset1 + modified.z / 64.0) / 2.0;
+		
+		posFinal.x += sin(windOffset0 + (modified.y + modified.z) / 32.0) / 3.0;
+		posFinal.z += cos(windOffset1 + (modified.y + modified.x) / 64.0) / 3.0;
 	}
 
 	gl_Position = projection * view * aTransform * posFinal;

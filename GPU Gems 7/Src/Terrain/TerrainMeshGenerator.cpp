@@ -8,11 +8,12 @@
 
 #include "Vendor/fastnoise/FastNoise.h"
 
-static std::unique_ptr<TerrainMesh> GenerateChunkMesh(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale);
+static std::unique_ptr<TerrainMesh> GenerateChunkMesh(FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, int scale);
+static glm::vec3 GenerateVertexPosition(const FastNoise& noise, int x, int z, int heightScale);
 
 
 
-TerrainChunkGenerator::TerrainChunkGenerator(int chunkDimensions, int maxHeight, float scale)
+TerrainChunkGenerator::TerrainChunkGenerator(int chunkDimensions, int maxHeight, int scale)
 	: chunkDimensions(chunkDimensions), maxHeight(maxHeight), scale(scale)
 {
 }
@@ -25,17 +26,17 @@ TerrainChunkGenerator::~TerrainChunkGenerator()
 std::unique_ptr<TerrainMesh> TerrainChunkGenerator::GenerateChunk(int chunkX, int chunkZ)
 {
 	FastNoise noise;
-	noise.SetFrequency(0.003);
+	noise.SetFrequency(0.003f);
 	noise.SetFractalOctaves(8);
 
 	hasGenerated.push_back(Coords(chunkX, chunkZ));
 
-	return std::move(GenerateChunkMesh(noise, chunkX, chunkZ, chunkDimensions, maxHeight, scale));
+	return GenerateChunkMesh(noise, chunkX, chunkZ, chunkDimensions, maxHeight, scale);
 }
 
 
 
-static std::unique_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, float scale)
+static std::unique_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int chunkX, int chunkZ, int chunkDimensions, int maxHeight, int scale)
 {
 	std::unique_ptr<TerrainMesh> result = std::make_unique<TerrainMesh>();
 
@@ -57,17 +58,23 @@ static std::unique_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int
 	float endZ   =  finalChunkSize;
 
 
-	for (float x = startX; x < endX; x++)
+	for (int x = startX; x < endX; x++)
 	{
-		for (float z = startZ; z < endZ; z++)
+		for (int z = startZ; z < endZ; z++)
 		{
-			float y0 = noise.GetValue(chunkX * chunkDimensions + x, chunkZ * chunkDimensions + z) * maxHeight;
-			float y1 = noise.GetValue(chunkX * chunkDimensions + x, chunkZ * chunkDimensions + z + 1) * maxHeight;
-			float y2 = noise.GetValue(chunkX * chunkDimensions + x + 1, chunkZ * chunkDimensions + z + 1) * maxHeight;
+			float xCoord = chunkX * chunkDimensions + x;
+			float zCoord = chunkZ * chunkDimensions + z;
 
-			glm::vec3 pos0((chunkX * chunkDimensions + x) * scale, y0, (chunkZ * chunkDimensions + z) * scale);
-			glm::vec3 pos1((chunkX * chunkDimensions + x) * scale, y1, (chunkZ * chunkDimensions + z + 1) * scale);
-			glm::vec3 pos2((chunkX * chunkDimensions + x + 1) * scale, y2, (chunkZ * chunkDimensions + z + 1) * scale);
+			glm::vec3 pos0 = GenerateVertexPosition(noise, xCoord, zCoord, maxHeight);
+			glm::vec3 pos1 = GenerateVertexPosition(noise, xCoord, zCoord + 1, maxHeight);
+			glm::vec3 pos2 = GenerateVertexPosition(noise, xCoord + 1, zCoord + 1, maxHeight);
+
+			pos0.x *= scale;
+			pos0.z *= scale;
+			pos1.x *= scale;
+			pos1.z *= scale;
+			pos2.x *= scale;
+			pos2.z *= scale;
 
 			glm::vec3 normal = glm::normalize(cross(pos1 - pos0, pos2 - pos0));
 
@@ -106,4 +113,20 @@ static std::unique_ptr<TerrainMesh> GenerateChunkMesh(const FastNoise noise, int
 	}
 
 	return std::move(result);
+}
+
+static glm::vec3 GenerateVertexPosition(const FastNoise& noise, int x, int z, int heightScale)
+{
+	glm::vec3 result;
+	result.x = x;
+	result.z = z;
+
+	float sample0 = ((noise.GetValue(x, z) + 1.f) / 2.f);
+	float sample1 = ((noise.GetValue(x * 8.f, z * 8.f) + 1.f) / 2.f);
+	float sample2 = ((noise.GetValue(x * 32.f, z * 32.f) + 1.f) / 2.f);
+
+	result.y = sample0 * 0.79f + sample1 * 0.2f + sample2 * 0.01f;
+	result.y *= heightScale;
+
+	return result;
 }

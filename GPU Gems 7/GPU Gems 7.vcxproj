@@ -137,6 +137,8 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\_Development\Libraries\SDL2-2.0.12\include;C:\_Development\Libraries\glm;$(ProjectDir)\Src;C:\_Development\Libraries\glad;$(IncludePath)</IncludePath>
     <LibraryPath>C:\_Development\Libraries\SDL2-2.0.12\lib\x64;$(LibraryPath)</LibraryPath>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

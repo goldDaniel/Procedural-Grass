@@ -39,6 +39,8 @@ private:
 	unsigned int loadCubemap(std::vector<std::string> faces);
 	Renderable* CreateSkyboxRenderable();
 
+	bool render_wireframes = false;
+
 	unsigned int skyboxCubemap;
 	Renderable* skyboxRenderable;
 

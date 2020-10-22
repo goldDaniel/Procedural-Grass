@@ -1,6 +1,8 @@
-#pragma once
+#ifndef INDEX_BUFFER_H_
+#define INDEX_BUFFER_H_
 
 #include <cstdint>
+#include <vector>
 #include <glad/glad.h>
 
 class IndexBuffer
@@ -45,3 +47,5 @@ private:
 	uint32_t m_indexBufferID = 0;
 	uint32_t m_numElements = 0;
 };
+
+#endif

@@ -5,10 +5,16 @@ in vec3 Normal;
 in vec2 TexCoords;
 
 uniform sampler2D grass_bilboard;
-
+uniform bool render_wireframes;
 
 void main()
 {
+    if(render_wireframes)
+    {
+        FragColor = vec4(0.2, 0.9, 0.2, 1.0);
+        return;
+    }
+
     vec3 lightDir = normalize(vec3(1,1,1));
     vec3 ambientLight = vec3(0.2, 0.2, 0.2);
 
