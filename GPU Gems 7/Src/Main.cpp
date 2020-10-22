@@ -126,6 +126,7 @@ int main(int argc, char** argv)
 
         static bool render_terrain = true;
         static bool render_skybox = true;
+        static float terrain_scale = 1;
 
         ImGui::Begin("Debug");
         {
