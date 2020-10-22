@@ -53,7 +53,6 @@ struct TerrainSettings
 {
     int chunk_dimensions = 32;
     int max_terrain_height = 512;
-    int generation_range = 16.f;
     int generation_range = 16;
     int scale = 4.f;
 };
@@ -126,6 +125,7 @@ int main(int argc, char** argv)
 
         static bool render_terrain = true;
         static bool render_skybox = true;
+        static bool render_wireframe = false;
         static float terrain_scale = 1;
 
         ImGui::Begin("Debug");
