@@ -19,21 +19,6 @@ struct TerrainMesh
 	std::vector<glm::vec2> texCoords;
 
 	std::vector<unsigned int> indices;
-
-	~TerrainMesh()
-	{
-		positions.clear();
-		positions.shrink_to_fit();
-
-		normals.clear();
-		normals.shrink_to_fit();
-
-		texCoords.clear();
-		texCoords.shrink_to_fit();
-
-		indices.clear();
-		indices.shrink_to_fit();
-	}
 };
 
 

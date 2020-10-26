@@ -1,12 +1,14 @@
 #include "Renderer.h"
 
+#include <SDL.h>
+
 ////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC
 ////////////////////////////////////////////////////////////////////////////////////////
 
 Renderer::Renderer()
 {
-	skyboxRenderable = CreateSkyboxRenderable();
+	skybox_renderable = CreateSkyboxRenderable();
 	glClearColor(0, 0, 0, 1);
 
 	glEnable(GL_BLEND);
@@ -14,8 +16,8 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-	indexBuffers.clear();
-	vertexArrays.clear();
+	index_buffers.clear();
+	vertex_arrays.clear();
 	shaders.clear();
 }
 
@@ -29,23 +31,28 @@ void Renderer::Clear()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void Renderer::UpdateViewport(int w, int h)
+{
+	glViewport(0, 0, w, h);
+}
+
 void Renderer::RenderSkybox(glm::mat4 view, glm::mat4 proj)
 {
 	glDepthFunc(GL_LEQUAL);
-	skyboxRenderable->shader->Bind();
-	skyboxRenderable->shader->SetMat4("projection", proj);
-	skyboxRenderable->shader->SetMat4("view", view);
+	skybox_renderable->shader->Bind();
+	skybox_renderable->shader->SetMat4("projection", proj);
+	skybox_renderable->shader->SetMat4("view", view);
 
 
-	glBindVertexArray(skyboxRenderable->vArray->GetID());
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxRenderable->iBuffer->GetID());
+	glBindVertexArray(skybox_renderable->vArray->GetID());
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox_renderable->iBuffer->GetID());
 
 
-	skyboxRenderable->shader->SetInt("skybox", 0);
+	skybox_renderable->shader->SetInt("skybox", 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_cubemap);
 
-	glDrawElements(GL_TRIANGLES, skyboxRenderable->iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, skybox_renderable->iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0);
 
 	glDepthFunc(GL_LESS);
 }
@@ -72,7 +79,7 @@ void Renderer::Render(const Renderable& renderable) const
 	//binds all textures in order they are added to the renderable
 	for (uint32_t i = 0; i < renderable.textures.size(); i++)
 	{
-		renderable.shader->SetInt(renderable.textureNames[i], i);
+		renderable.shader->SetInt(renderable.texture_names[i], i);
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, renderable.textures[i]->GetID());
 	}
@@ -80,15 +87,8 @@ void Renderer::Render(const Renderable& renderable) const
 	glBindVertexArray(renderable.vArray->GetID());
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderable.iBuffer->GetID());
 
-	uint32_t instances = renderable.vArray->m_instances;
-	if (instances > 0)
-	{
-		glDrawElementsInstanced(GL_TRIANGLES, renderable.iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0, instances);
-	}
-	else
-	{
-		glDrawElements(GL_TRIANGLES, renderable.iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0);
-	}
+	uint32_t instances = renderable.vArray->num_instances;
+	glDrawElementsInstanced(GL_TRIANGLES, renderable.iBuffer->GetNumElements(), GL_UNSIGNED_INT, 0, instances);
 }
 
 
@@ -111,7 +111,7 @@ VertexArray* const Renderer::CreateVertexArray()
 	auto resource = std::make_unique<VertexArray>();
 	auto result = resource.get();
 
-	vertexArrays.push_back(std::move(resource));
+	vertex_arrays.push_back(std::move(resource));
 
 	return result;
 }
@@ -121,15 +121,15 @@ IndexBuffer* const Renderer::CreateIndexBuffer(const std::vector<unsigned int>& 
 	auto resource = std::make_unique<IndexBuffer>(indices);
 	auto result = resource.get();
 
-	indexBuffers.push_back(std::move(resource));
+	index_buffers.push_back(std::move(resource));
 
 	return result;
 }
 
-Shader* const Renderer::CreateShader(const char* vertexPath, const char* fragPath)
+Shader* const Renderer::CreateShader(const char* vertex_path, const char* frag_path)
 {
-	std::string key = vertexPath;
-	key += fragPath;
+	std::string key = vertex_path;
+	key += frag_path;
 
 	auto shaderIter = shaders.find(key);
 	if (shaderIter != shaders.end())
@@ -137,7 +137,7 @@ Shader* const Renderer::CreateShader(const char* vertexPath, const char* fragPat
 		return shaders[key].get();
 	}
 
-	shaders[key] = std::make_unique<Shader>(vertexPath, fragPath);
+	shaders[key] = std::make_unique<Shader>(vertex_path, frag_path);
 
 	return shaders[key].get();
 }
@@ -284,8 +284,8 @@ Renderable* Renderer::CreateSkyboxRenderable()
 	IndexBuffer* skybox_iBuffer = CreateIndexBuffer(skybox_indices);
 
 
-	skyboxCubemap = loadCubemap(cubemap_faces);
-	skyboxRenderable = CreateRenderable(skybox_shader, skybox_vArray, skybox_iBuffer);
+	skybox_cubemap = loadCubemap(cubemap_faces);
+	skybox_renderable = CreateRenderable(skybox_shader, skybox_vArray, skybox_iBuffer);
 	
-	return skyboxRenderable;
+	return skybox_renderable;
 }

@@ -142,5 +142,8 @@
     <ClInclude Include="Src\Renderer\Frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Terrain\TerrainSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -27,15 +27,10 @@ private:
 
 	friend class Renderer;
 
-	uint32_t m_instances;
+	uint32_t num_instances;
 	
-	struct VertexBuffer
-	{
-		uint32_t m_vertexBufferID;
-	};
+	uint32_t vertex_array_ID = 0;
 
-	uint32_t m_vertexArrayID = 0;
-
-	uint32_t m_VertexBufferIndex = 0;
-	std::vector<VertexBuffer> m_vertexBuffers;
+	uint32_t vertex_buffer_index = 0;
+	std::vector<uint32_t> vertex_buffers;
 };

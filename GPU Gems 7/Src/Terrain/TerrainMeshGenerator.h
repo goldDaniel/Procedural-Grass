@@ -4,6 +4,7 @@
 #define TERRAIN_CHUNK_GEN_H_
 
 #include "TerrainMesh.h"
+#include "TerrainSettings.h"
 #include <memory>
 #include <unordered_map>
 
@@ -14,30 +15,28 @@ class TerrainChunkGenerator
 {
 public: 
 
-	TerrainChunkGenerator(int chunkDimensions, int maxHeight = 128, int scale = 1);
+	TerrainChunkGenerator(TerrainSettings settings);
 	~TerrainChunkGenerator();
 
-	std::unique_ptr<TerrainMesh> GenerateChunk(int chunkX, int chunkZ);
+	TerrainMesh* GenerateChunk(int chunkX, int chunkZ);
 
 	bool HasGenerated(int chunkX, int chunkZ) const 
 	{
-		return std::find(hasGenerated.begin(), hasGenerated.end(), Coords(chunkX, chunkZ)) != hasGenerated.end();
+		return std::find(has_generated.begin(), has_generated.end(), Coords(chunkX, chunkZ)) != has_generated.end();
 	}
 
 	void Unload(int chunkX, int chunkZ)
 	{
-		auto pos = std::find(hasGenerated.begin(), hasGenerated.end(), Coords(chunkX, chunkZ));
-		hasGenerated.erase(pos);
+		auto pos = std::find(has_generated.begin(), has_generated.end(), Coords(chunkX, chunkZ));
+		has_generated.erase(pos);
 	}
 
 private:
-	const int scale;
-	const int chunkDimensions;
-	const int maxHeight;
+	TerrainSettings settings;
 
-	const int generationRange = 16;
+	std::vector<Coords> has_generated;
 
-	std::vector<Coords> hasGenerated;
+	std::unique_ptr<TerrainMesh> mesh;
 };
 
 #endif

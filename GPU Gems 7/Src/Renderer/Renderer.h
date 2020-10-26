@@ -1,4 +1,3 @@
-#pragma once
 #ifndef RENDERER_H_
 #define RENDERER_H_
 
@@ -21,11 +20,12 @@ public:
 
 	void SetClearColor(const glm::vec4& color);
 	void Clear();
+	void UpdateViewport(int w, int h);
+
 	void RenderSkybox(glm::mat4 view, glm::mat4 proj);
 	void Render(const Renderable& renderable) const;
-
-
 	void RenderWireframes(bool wireframes);
+
 
 	VertexArray* const CreateVertexArray();
 	IndexBuffer* const CreateIndexBuffer(const std::vector<unsigned int>& indices);
@@ -41,14 +41,14 @@ private:
 
 	bool render_wireframes = false;
 
-	unsigned int skyboxCubemap;
-	Renderable* skyboxRenderable;
+	unsigned int skybox_cubemap;
+	Renderable* skybox_renderable;
 
 	
 
 	std::vector<std::unique_ptr<Renderable>> renderables;
-	std::vector<std::unique_ptr<VertexArray>> vertexArrays;
-	std::vector<std::unique_ptr<IndexBuffer>> indexBuffers;
+	std::vector<std::unique_ptr<VertexArray>> vertex_arrays;
+	std::vector<std::unique_ptr<IndexBuffer>> index_buffers;
 
 	std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
 

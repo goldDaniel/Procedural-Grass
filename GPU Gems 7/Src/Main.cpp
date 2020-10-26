@@ -19,7 +19,6 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glad/glad.h>
 #include <SDL.h>
 
 #include "Camera.h"
@@ -49,13 +48,7 @@ struct pair_hash
     }
 };
 
-struct TerrainSettings
-{
-    int chunk_dimensions = 32;
-    int max_terrain_height = 512;
-    int generation_range = 16;
-    int scale = 2.f;
-};
+
 TerrainSettings settings;
 
 
@@ -84,7 +77,7 @@ int main(int argc, char** argv)
     }
 
 
-    TerrainChunkGenerator gen(settings.chunk_dimensions, settings.max_terrain_height, settings.scale);
+    TerrainChunkGenerator gen(settings);
     std::unordered_map<Coords, std::unique_ptr<TerrainRenderable>, pair_hash> renderables;
 
 
@@ -126,7 +119,6 @@ int main(int argc, char** argv)
         static bool render_terrain = true;
         static bool render_skybox = true;
         static bool render_wireframe = false;
-        static float terrain_scale = 1;
 
         ImGui::Begin("Debug");
         {
@@ -134,15 +126,11 @@ int main(int argc, char** argv)
             ImGui::Checkbox("Render Skybox", &render_skybox);
             ImGui::Checkbox("Render wireframes", &render_wireframe);
 
-            ImGui::DragFloat("Terrain Scale", &terrain_scale, 1, 0.25, 32);
-
             ImGui::Spacing();
-
-            if (ImGui::CollapsingHeader("FrameTime Info", ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                ImGui::Separator();
-                frameTimePlot.DrawHistory();
-            }
+            ImGui::Spacing();
+            ImGui::Text("Frame Info");
+            ImGui::Separator();
+            frameTimePlot.DrawHistory();
         }
         ImGui::End();
 
@@ -156,7 +144,6 @@ int main(int argc, char** argv)
             cam.ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
         }
 
-        float speed = 64;
         if (input->IsKeyDown(SDLK_a)) cam.ProcessKeyboard(Camera_Movement::LEFT, dt);
         if (input->IsKeyDown(SDLK_d)) cam.ProcessKeyboard(Camera_Movement::RIGHT, dt);
 
@@ -170,6 +157,7 @@ int main(int argc, char** argv)
         int chunkX = static_cast<int>(cam.Position.x / settings.chunk_dimensions / settings.scale);
         int chunkZ = static_cast<int>(cam.Position.z / settings.chunk_dimensions / settings.scale);
         int loadRange = settings.generation_range;
+        int unloadRange = settings.generation_range * 2;
 
         for (int x = -loadRange; x < loadRange; x++)
         {
@@ -177,22 +165,23 @@ int main(int argc, char** argv)
             {
                 if (!gen.HasGenerated(chunkX + x, chunkZ + z))
                 {
-                    std::unique_ptr<TerrainMesh> chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
+                    TerrainMesh* chunk = gen.GenerateChunk(chunkX + x, chunkZ + z);
                     renderables[Coords(chunkX + x, chunkZ + z)] = (std::make_unique<TerrainRenderable>(*chunk, *renderer));
                 }
             }
         }
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
+        renderer->Clear();
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
-        glViewport(0, 0, w, h);
+        renderer->UpdateViewport(w, h);
+
+        
 
         glm::mat4 skyboxView = glm::mat4(glm::mat3(cam.GetViewMatrix()));
-        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 0.1f, 5000.f);
+        glm::mat4 proj = glm::perspective(glm::pi<float>() / 4.0f, (float)w / (float)h, 0.1f, 1000.f);
 
-        Frustum frustum(proj * cam.GetViewMatrix());
+        Frustum frustum(proj * glm::translate(cam.GetViewMatrix(), -cam.Front));
 
         
         if (render_skybox)
@@ -204,10 +193,6 @@ int main(int argc, char** argv)
 
         if (render_terrain)
         {
-            float angleOffset = glm::pi<float>() / 2;
-            float offset0 = glm::sin(elapsed + angleOffset) * glm::sin(elapsed*0.15f + angleOffset);
-            float offset1 = glm::cos(elapsed) + glm::cos(elapsed*0.15f);
-            
             for (auto& pair : renderables)
             {
                 auto terrainRenderable = pair.second.get();
@@ -216,6 +201,12 @@ int main(int argc, char** argv)
                 glm::vec3 aabb_max;
                 aabb_min = terrainRenderable->GetMin();
                 aabb_max = terrainRenderable->GetMax();
+
+
+                float angleOffset = glm::pi<float>() / 2.0 * aabb_min.x - aabb_max.z;
+                 
+                float offset0 = glm::sin(elapsed + angleOffset) * glm::sin(elapsed * 0.15f + angleOffset);
+                float offset1 = glm::cos(elapsed) + glm::cos(elapsed * 0.15f);
 
                 terrainRenderable->SetWindOffsets(offset0, offset1);
                 terrainRenderable->AddElapsedTime(dt);
@@ -305,6 +296,7 @@ bool DetermineTerrainSettings(const ImGuiIO& io)
 
             ImGui::InputInt("Chunk Size", &settings.chunk_dimensions, 2, 64);
             ImGui::InputInt("Generation Distance", &settings.generation_range, 2, 4);
+            ImGui::InputInt("XZ Scale", &settings.scale, 1, 1);
             ImGui::InputInt("Heightmap Scale", &settings.max_terrain_height, 32, 64);
 
             if (ImGui::Button("Generate Terrain"))

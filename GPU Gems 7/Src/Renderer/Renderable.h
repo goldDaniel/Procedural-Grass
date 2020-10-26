@@ -1,4 +1,4 @@
-#pragma once
+
 #ifndef RENDERABLE_H_
 #define RENDERABLE_H_
 
@@ -18,12 +18,13 @@ private:
 	glm::mat4 view = glm::mat4(1.0);
 	glm::mat4 proj = glm::mat4(1.0);
 
-	Shader const* const shader;
-	VertexArray const* const vArray;
-	IndexBuffer const* const iBuffer;
+	Shader const * const shader;
+	VertexArray const * const vArray;
+	IndexBuffer const * const iBuffer;
 
-	std::vector<std::string> textureNames;
+	std::vector<std::string> texture_names;
 	std::vector<Texture2D*> textures;
+	
 
 	bool render_backface;
 

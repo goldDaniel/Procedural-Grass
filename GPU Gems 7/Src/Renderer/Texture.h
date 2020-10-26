@@ -16,7 +16,6 @@ class Texture2D
 {
 
 public:
-
 	Texture2D(const std::string& filepath)
 	{
 		unsigned int textureID;

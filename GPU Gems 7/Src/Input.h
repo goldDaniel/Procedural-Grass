@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INPUT_H_
+#define INPUT_H_
 
 #include <SDL.h>
 
@@ -11,23 +12,23 @@ public:
 
     Input(const std::function<void()> functor)
     {
-        quitCallback = functor;
+        quit_callback = functor;
     }
 
     bool IsKeyDown(SDL_KeyCode code) 
     {
-        return keyDown[code];
+        return key_down[code];
     }
 
     bool IsButtonDown(int button)
     {
-        return buttonDown[button];
+        return button_down[button];
     }
   
     //relative to top-left
-    glm::vec2 GetMousePos()
+    const glm::vec2 GetMousePos()
     {
-        return { mouseX, mouseY };
+        return { mouse_x, mouse_y };
     }
 
 	void Update()
@@ -39,26 +40,26 @@ public:
             switch (event.type)
             {
             case SDL_QUIT:
-                quitCallback();
+                quit_callback();
                 break;
 
             case SDL_KEYDOWN:
-                keyDown[event.key.keysym.sym] = true;
+                key_down[event.key.keysym.sym] = true;
                 break;
             case SDL_KEYUP:
-                keyDown[event.key.keysym.sym] = false;
+                key_down[event.key.keysym.sym] = false;
                 break;
 
             case SDL_MOUSEMOTION:
-                SDL_GetGlobalMouseState(&mouseX, &mouseY);
+                SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
-                buttonDown[event.button.button] = true;
+                button_down[event.button.button] = true;
                 break;
 
             case SDL_MOUSEBUTTONUP:
-                buttonDown[event.button.button] = false;
+                button_down[event.button.button] = false;
                 break;
             }
         }
@@ -66,12 +67,14 @@ public:
 
 private:
    
-    int mouseX;
-    int mouseY;
+    int mouse_x;
+    int mouse_y;
 
-    std::function<void()> quitCallback;
+    std::function<void()> quit_callback;
 
-    std::unordered_map<int, bool> buttonDown;
+    std::unordered_map<int, bool> button_down;
 
-    std::unordered_map<int, bool> keyDown;
+    std::unordered_map<int, bool> key_down;
 };
+
+#endif
