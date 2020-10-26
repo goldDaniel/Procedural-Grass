@@ -193,6 +193,8 @@ int main(int argc, char** argv)
 
         if (render_terrain)
         {
+            float offset0 = glm::sin(elapsed) * glm::sin(elapsed * 0.15f);
+            float offset1 = glm::cos(elapsed) + glm::cos(elapsed * 0.15f);
             for (auto& pair : renderables)
             {
                 auto terrainRenderable = pair.second.get();
@@ -201,12 +203,6 @@ int main(int argc, char** argv)
                 glm::vec3 aabb_max;
                 aabb_min = terrainRenderable->GetMin();
                 aabb_max = terrainRenderable->GetMax();
-
-
-                float angleOffset = glm::pi<float>() / 2.0 * aabb_min.x - aabb_max.z;
-                 
-                float offset0 = glm::sin(elapsed + angleOffset) * glm::sin(elapsed * 0.15f + angleOffset);
-                float offset1 = glm::cos(elapsed) + glm::cos(elapsed * 0.15f);
 
                 terrainRenderable->SetWindOffsets(offset0, offset1);
                 terrainRenderable->AddElapsedTime(dt);

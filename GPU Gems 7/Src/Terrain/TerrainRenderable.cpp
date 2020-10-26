@@ -88,8 +88,6 @@ void TerrainRenderable::GenerateGroundRenderable(Renderer& renderer,
     heightmap_renderable->AddTexture("grass", ground_texture);
     heightmap_renderable->SetModelMatrix(glm::mat4(1.f));
 
-    int offsetX = chunk.chunkX * chunk.chunk_dimensions;
-    int offsetZ = chunk.chunkZ * chunk.chunk_dimensions;
     for (size_t i = 0; i < chunk.positions.size(); i++)
     {
         glm::mat4 trans = glm::translate(glm::mat4(1.f), chunk.positions[i]);
@@ -98,7 +96,7 @@ void TerrainRenderable::GenerateGroundRenderable(Renderer& renderer,
 
 
         float rotation = glm::pi<float>() * percent;
-        float scale = 1 + percent * 8;
+        float scale = 1 + percent * 2;
 
         trans = glm::rotate(trans, rotation, glm::vec3(0, 1, 0));
         trans = glm::scale(trans, glm::vec3(scale, scale, scale));
