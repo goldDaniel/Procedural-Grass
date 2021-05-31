@@ -21,9 +21,9 @@ private:
 	Shader const * const shader;
 	VertexArray const * const vArray;
 	IndexBuffer const * const iBuffer;
-
+	
 	std::vector<std::string> texture_names;
-	std::vector<Texture2D*> textures;
+	std::vector<Texture*> textures;
 	
 
 	bool render_backface;
@@ -37,7 +37,7 @@ public:
 
 	void Bind() const;
 
-	void AddTexture(std::string const& uniformName, Texture2D * const texture);
+	void AddTexture(std::string const& uniformName, Texture * const texture);
 
 	void SetModelMatrix(const glm::mat4& model);
 	void SetViewMatrix(const glm::mat4& view);

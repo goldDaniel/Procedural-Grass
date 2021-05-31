@@ -30,9 +30,6 @@
     <ClCompile Include="Src\Renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Terrain\TerrainMeshGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Renderer\Renderable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,7 +57,10 @@
     <ClCompile Include="Src\Vendor\imgui\metrics_gui\source\ProggyTiny.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Terrain\TerrainRenderable.cpp">
+    <ClCompile Include="Src\Core\Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Renderer\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -76,9 +76,6 @@
     <ClInclude Include="Src\Renderer\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Renderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -88,25 +85,13 @@
     <ClInclude Include="Src\Renderer\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Vendor\fastnoise\FastNoise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Src\Renderer\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Terrain\TerrainMesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Terrain\TerrainMeshGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Renderer\Renderable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Terrain\GrassMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Src\Vendor\imgui\imconfig.h">
@@ -136,13 +121,22 @@
     <ClInclude Include="Src\Vendor\imgui\metrics_gui\include\metrics_gui\metrics_gui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Terrain\TerrainRenderable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Renderer\Frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Terrain\TerrainSettings.h">
+    <ClInclude Include="Src\Core\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Core\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Core\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Core\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Core\SampleApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

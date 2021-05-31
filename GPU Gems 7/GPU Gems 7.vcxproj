@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Core\Application.cpp" />
     <ClCompile Include="Src\glad.c" />
     <ClCompile Include="Src\Main.cpp" />
     <ClCompile Include="Src\Renderer\Renderable.cpp" />
     <ClCompile Include="Src\Renderer\Renderer.cpp" />
+    <ClCompile Include="Src\Renderer\Texture.cpp" />
     <ClCompile Include="Src\Renderer\VertexArray.cpp" />
-    <ClCompile Include="Src\Terrain\TerrainMeshGenerator.cpp" />
-    <ClCompile Include="Src\Terrain\TerrainRenderable.cpp" />
     <ClCompile Include="Src\Vendor\fastnoise\FastNoise.cpp" />
     <ClCompile Include="Src\Vendor\imgui\imgui.cpp" />
     <ClCompile Include="Src\Vendor\imgui\imgui_demo.cpp" />
@@ -45,8 +45,11 @@
     <None Include="Assets\Shaders\VertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Src\Camera.h" />
-    <ClInclude Include="Src\Input.h" />
+    <ClInclude Include="Src\Core\Application.h" />
+    <ClInclude Include="Src\Core\Camera.h" />
+    <ClInclude Include="Src\Core\Core.h" />
+    <ClInclude Include="Src\Core\Input.h" />
+    <ClInclude Include="Src\Core\SampleApplication.h" />
     <ClInclude Include="Src\Renderer\Frustum.h" />
     <ClInclude Include="Src\Renderer\IndexBuffer.h" />
     <ClInclude Include="Src\Renderer\Renderable.h" />
@@ -54,11 +57,6 @@
     <ClInclude Include="Src\Renderer\Shader.h" />
     <ClInclude Include="Src\Renderer\Texture.h" />
     <ClInclude Include="Src\Renderer\VertexArray.h" />
-    <ClInclude Include="Src\Terrain\GrassMesh.h" />
-    <ClInclude Include="Src\Terrain\TerrainMeshGenerator.h" />
-    <ClInclude Include="Src\Terrain\TerrainMesh.h" />
-    <ClInclude Include="Src\Terrain\TerrainRenderable.h" />
-    <ClInclude Include="Src\Terrain\TerrainSettings.h" />
     <ClInclude Include="Src\Vendor\fastnoise\FastNoise.h" />
     <ClInclude Include="Src\Vendor\imgui\imconfig.h" />
     <ClInclude Include="Src\Vendor\imgui\imgui.h" />
@@ -138,7 +136,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\_Development\Libraries\SDL2-2.0.12\include;C:\_Development\Libraries\glm;$(ProjectDir)\Src;C:\_Development\Libraries\glad;$(IncludePath)</IncludePath>
     <LibraryPath>C:\_Development\Libraries\SDL2-2.0.12\lib\x64;$(LibraryPath)</LibraryPath>
-    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

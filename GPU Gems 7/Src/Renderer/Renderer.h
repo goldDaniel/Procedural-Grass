@@ -1,15 +1,15 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
 
-#include "VertexArray.h"
-#include "IndexBuffer.h"
-#include "Shader.h"
-
-#include "Texture.h"
-#include "Renderable.h"
-
+#include <glm/glm.hpp>
 #include <unordered_map>
+#include <memory>
 
+class VertexArray;
+class IndexBuffer;
+class Renderable;
+class Shader;
+class Texture;
 
 class Renderer
 {
@@ -23,7 +23,7 @@ public:
 	void UpdateViewport(int w, int h);
 
 	void RenderSkybox(glm::mat4 view, glm::mat4 proj);
-	void Render(const Renderable& renderable) const;
+	void Render(const Renderable & renderable) const;
 	void RenderWireframes(bool wireframes);
 
 
@@ -31,12 +31,10 @@ public:
 	IndexBuffer* const CreateIndexBuffer(const std::vector<unsigned int>& indices);
 	Shader* const CreateShader(const char* vertexPath, const char* indexPath);
 	Renderable* const CreateRenderable(Shader* shader, VertexArray* v, IndexBuffer* i);
-	Texture2D* const CreateTexture2D(const std::string& filepath);
-
+	Texture* const CreateTexture2D(const std::string& filepath);
 
 private:
 
-	unsigned int loadCubemap(std::vector<std::string> faces);
 	Renderable* CreateSkyboxRenderable();
 
 	bool render_wireframes = false;
@@ -52,7 +50,7 @@ private:
 
 	std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
 
-	std::unordered_map<std::string, std::unique_ptr<Texture2D>> textures;
+	std::unordered_map<std::string, std::unique_ptr<Texture>> textures;
 };
 
 #endif

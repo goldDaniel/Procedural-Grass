@@ -1,10 +1,8 @@
 #include "Renderer.h"
 
-#include <SDL.h>
+#include <Core/Core.h>
+#include "Renderable.h"
 
-////////////////////////////////////////////////////////////////////////////////////////
-//PUBLIC
-////////////////////////////////////////////////////////////////////////////////////////
 
 Renderer::Renderer()
 {
@@ -43,10 +41,8 @@ void Renderer::RenderSkybox(glm::mat4 view, glm::mat4 proj)
 	skybox_renderable->shader->SetMat4("projection", proj);
 	skybox_renderable->shader->SetMat4("view", view);
 
-
 	glBindVertexArray(skybox_renderable->vArray->GetID());
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox_renderable->iBuffer->GetID());
-
 
 	skybox_renderable->shader->SetInt("skybox", 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -81,7 +77,7 @@ void Renderer::Render(const Renderable& renderable) const
 	{
 		renderable.shader->SetInt(renderable.texture_names[i], i);
 		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, renderable.textures[i]->GetID());
+		glBindTexture(GL_TEXTURE_2D, renderable.textures[i]->ID);
 	}
 
 	glBindVertexArray(renderable.vArray->GetID());
@@ -163,7 +159,7 @@ Renderable* const Renderer::CreateRenderable(Shader* shader, VertexArray* v, Ind
 	return result;
 }
 
-Texture2D* const Renderer::CreateTexture2D(const std::string& filepath)
+Texture* const Renderer::CreateTexture2D(const std::string& filepath)
 {
 	auto texturesIter = textures.find(filepath);
 	if (texturesIter != textures.end())
@@ -171,46 +167,11 @@ Texture2D* const Renderer::CreateTexture2D(const std::string& filepath)
 		return textures[filepath].get();
 	}
 	
-	textures[filepath] = std::make_unique<Texture2D>(filepath);
+	textures[filepath] = std::unique_ptr<Texture>(Texture::Create(filepath));
 
 	return textures[filepath].get();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-//PRIVATE
-////////////////////////////////////////////////////////////////////////////////////////
-
-unsigned int Renderer::loadCubemap(std::vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	return textureID;
-}
 
 Renderable* Renderer::CreateSkyboxRenderable()
 {
@@ -284,7 +245,7 @@ Renderable* Renderer::CreateSkyboxRenderable()
 	IndexBuffer* skybox_iBuffer = CreateIndexBuffer(skybox_indices);
 
 
-	skybox_cubemap = loadCubemap(cubemap_faces);
+	skybox_cubemap = Texture::LoadCubemap(cubemap_faces);
 	skybox_renderable = CreateRenderable(skybox_shader, skybox_vArray, skybox_iBuffer);
 	
 	return skybox_renderable;

@@ -3,92 +3,23 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
 
+#include <Core/Core.h>
 
-#include <cstdint>
-#include <iostream>
-#include <string>
-
-#include <glad/glad.h>
-
-#include "Vendor/stb_image/stb_image.h"
-
-class Texture2D
+class Texture
 {
-
 public:
-	Texture2D(const std::string& filepath)
-	{
-		unsigned int textureID;
-		glGenTextures(1, &textureID);
-		glBindTexture(GL_TEXTURE_2D, textureID);
-
-		int width, height, nrChannels;
-		
-		unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			if(nrChannels == 3)
-			{ 
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-			else if (nrChannels == 4)
-			{
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-			else
-			{
-				std::cout << "Texture2D requires either 3 or 4 channels: " << nrChannels << " - at: "   << filepath << std::endl;
-			}
-
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Texture2D failed to load at path: " << filepath << std::endl;
-			stbi_image_free(data);
-		}
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-		this->ID = textureID;
-		this->width = width;
-		this->height = height;
-	}
-
-	~Texture2D()
-	{
-		glDeleteTextures(1, &ID);
-	}
-
-	uint32_t GetID() const
-	{
-		return ID;
-	}
-
-	int GetWidth() const
-	{
-		return width;
-	}
-
-	int GetHeight() const
-	{
-		return height;
-	}
-
-private:
 	
-	Texture2D(uint32_t ID, int w, int h) 
-		: ID(ID), width(w), height(h) {}
+	Texture(uint32_t ID, int w, int h);
 
-	uint32_t ID;
+	~Texture();
 
-	int width;
-	int height;
+	const uint32_t ID;
+
+	const int width;
+	const int height;
+
+	static Texture* Create(const std::string& filepath);
+	static unsigned int LoadCubemap(const std::vector<std::string>& faces);	
 };
 
 

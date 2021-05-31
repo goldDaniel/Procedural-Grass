@@ -34,7 +34,7 @@ struct MetricsGuiMetric {
         KNOWN_MAX_VALUE         = 1u << 3,
     };
 
-    enum { NUM_HISTORY_SAMPLES = 256 };
+    enum { NUM_HISTORY_SAMPLES = 512 };
 
     std::string mDescription;
     std::string mUnits;
