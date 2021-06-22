@@ -3,7 +3,7 @@
 #include <Core/Core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "Vendor/stb_image/stb_image.h"
+#include <stb_image/stb_image.h>
 
 
 Texture::Texture(uint32_t ID, int w, int h)

@@ -10,7 +10,7 @@
 #include <vector>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum Camera_Movement {
+enum class Camera_Movement {
     FORWARD,
     BACKWARD,
 
@@ -76,19 +76,19 @@ public:
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
+        if (direction == Camera_Movement::FORWARD)
             Position += Front * velocity;
-        if (direction == BACKWARD)
+        if (direction == Camera_Movement::BACKWARD)
             Position -= Front * velocity;
 
-        if (direction == LEFT)
+        if (direction == Camera_Movement::LEFT)
             Position -= Right * velocity;
-        if (direction == RIGHT)
+        if (direction == Camera_Movement::RIGHT)
             Position += Right * velocity;
 
-        if (direction == DOWN)
+        if (direction == Camera_Movement::DOWN)
             Position -= glm::vec3(0,1,0) * velocity;
-        if (direction == UP)
+        if (direction == Camera_Movement::UP)
             Position += glm::vec3(0, 1, 0) * velocity;
     }
 

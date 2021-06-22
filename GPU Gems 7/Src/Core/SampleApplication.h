@@ -8,26 +8,16 @@
 class SampleApplication : public Application
 {
 private:
-	MetricsGuiMetric frameTimeMetric;
-	MetricsGuiPlot frameTimePlot;
 
 	Renderable* renderable;
 
 	Camera cam;
 
-	glm::vec2 prevMousePos;
+	glm::vec2 prevMousePos{0,0};
 
 public:
 	SampleApplication() : Application()
 	{
-		frameTimeMetric = MetricsGuiMetric("Frame time", "s", MetricsGuiMetric::USE_SI_UNIT_PREFIX);
-		frameTimeMetric.mSelected = true;
-		frameTimePlot.mShowAverage = true;
-		frameTimePlot.mShowLegendAverage = true;
-		frameTimePlot.mShowLegendColor = false;
-		frameTimePlot.AddMetric(&frameTimeMetric);
-
-
 		auto vArr = renderer->CreateVertexArray();
 		const float pos[] =
 		{
@@ -78,9 +68,6 @@ protected:
 
         if (input->IsKeyDown(SDLK_LSHIFT)) cam.ProcessKeyboard(Camera_Movement::DOWN, dt);
 		if (input->IsKeyDown(SDLK_SPACE)) cam.ProcessKeyboard(Camera_Movement::UP, dt);
-
-		frameTimeMetric.AddNewValue(dt);
-		frameTimePlot.UpdateAxes();
 	}
 
 	virtual void Render() override
@@ -96,17 +83,6 @@ protected:
 		renderable->SetViewMatrix(cam.GetViewMatrix());
 		renderable->SetProjectionMatrix(proj);
 		renderer->Render(*renderable);
-
-		ImGui::Begin("Debug");
-		{
-
-			ImGui::Spacing();
-			ImGui::Spacing();
-			ImGui::Text("Frame Info");
-			ImGui::Separator();
-			frameTimePlot.DrawHistory();
-		}
-		ImGui::End();
 	}
 };
 

@@ -31,15 +31,6 @@ static void InitializeWindow(SDL_Window*& window, SDL_GLContext& gl_context, int
 
     std::cout << "OpenGL version loaded: " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    ImGui::StyleColorsDark();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-    ImGui_ImplOpenGL3_Init("#version 150");
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -65,9 +56,6 @@ void Application::Run()
      
     while (running)
     {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(window);
-        ImGui::NewFrame();
 
         uint32_t currTime = SDL_GetTicks();
         float dt = static_cast<float>(currTime - prevTime) / 1000.f;
@@ -82,9 +70,6 @@ void Application::Run()
         renderer->UpdateViewport(screen_width, screen_height);
 
         this->Render();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(window);
     }
